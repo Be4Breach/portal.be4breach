@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Search, Settings, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -32,8 +32,54 @@ const TopNav = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    email: string;
+    role: string;
+    firstName?: string;
+    lastName?: string;
+  } | null>(null);
+
+  // Decode JWT token to get user info
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserInfo({
+          email: payload.sub || payload.email || "",
+          role: payload.role || "user",
+          firstName: payload.first_name,
+          lastName: payload.last_name,
+        });
+      } catch (e) {
+        console.error("Failed to decode token", e);
+      }
+    }
+  }, []);
 
   const notifications = recentAlerts.slice(0, 3);
+
+  // Generate initials from name or email
+  const getInitials = () => {
+    if (userInfo?.firstName && userInfo?.lastName) {
+      return `${userInfo.firstName[0]}${userInfo.lastName[0]}`.toUpperCase();
+    }
+    if (userInfo?.email) {
+      return userInfo.email.substring(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    if (userInfo?.firstName && userInfo?.lastName) {
+      return `${userInfo.firstName} ${userInfo.lastName}`;
+    }
+    if (userInfo?.email) {
+      return userInfo.email.split('@')[0];
+    }
+    return "User";
+  };
 
   const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && search.trim()) {
@@ -129,13 +175,13 @@ const TopNav = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity">
-              JD
+              {getInitials()}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-medium">John Doe</p>
-              <p className="text-xs text-muted-foreground">john@be4breach.com</p>
+              <p className="text-sm font-medium">{getDisplayName()}</p>
+              <p className="text-xs text-muted-foreground">{userInfo?.email || "user@be4breach.com"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/settings")}>Profile Settings</DropdownMenuItem>
