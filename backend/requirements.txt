@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+motor
+pydantic[email]
+python-multipart
+python-jose[cryptography]
+passlib[argon2]
+python-dotenv
