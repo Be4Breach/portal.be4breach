@@ -10,8 +10,8 @@ const Index = () => {
   return (
     <div className="space-y-3 w-full max-w-6xl">
       <div>
-        <h1 className="text-xl font-bold">Threat Intelligence Dashboard</h1>
-        <p className="text-sm text-muted-foreground">We see threats before they become breaches.</p>
+        <h1 className="text-xl font-bold">Latest Threat Landscape</h1>
+        <p className="text-sm text-muted-foreground">Summary of the latest threats around the globe.</p>
       </div>
 
       <StatsCards />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { recentAlerts } from "@/data/mockData";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Shield, Clock, Server, AlertTriangle } from "lucide-react";
 
-type Alert = (typeof recentAlerts)[number];
+type Alert = {
+  id: number;
+  name: string;
+  source: string;
+  severity: string;
+  time: string;
+  description: string;
+};
 
 const severityStyles: Record<string, string> = {
   Critical: "bg-destructive text-destructive-foreground",
@@ -24,6 +31,31 @@ const severityStyles: Record<string, string> = {
 const RecentAlerts = () => {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<Alert | null>(null);
+  const { data, loading } = useDashboardData();
+
+  if (loading || !data) {
+    return (
+      <Card className="p-5 animate-fade-in animate-fade-in-delay-3">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold">Recent Threat Alerts</h3>
+        </div>
+        <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-3 rounded-lg border bg-card">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
+                <div className="h-5 w-12 bg-muted rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -38,7 +70,7 @@ const RecentAlerts = () => {
           </button>
         </div>
         <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-          {recentAlerts.map((alert) => (
+          {data.recentAlerts.map((alert) => (
             <button
               key={alert.id}
               onClick={() => setSelected(alert)}

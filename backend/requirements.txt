@@ -6,3 +6,7 @@ python-multipart
 python-jose[cryptography]
 passlib[argon2]
 python-dotenv
+feedparser
+requests
+python-dateutil
+jinja2

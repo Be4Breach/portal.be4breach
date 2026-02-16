@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Search, Settings, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { recentAlerts } from "@/data/mockData";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 import navLogo from "@/assets/logo.jpeg";
-import { toast } from "react-hot-toast";
 import {
   Popover,
   PopoverContent,
@@ -32,6 +31,7 @@ const TopNav = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const { data } = useDashboardData();
   const [userInfo, setUserInfo] = useState<{
     email: string;
     role: string;
@@ -57,7 +57,7 @@ const TopNav = () => {
     }
   }, []);
 
-  const notifications = recentAlerts.slice(0, 3);
+  const notifications = (data?.recentAlerts ?? []).slice(0, 3);
 
   // Generate initials from name or email
   const getInitials = () => {
@@ -90,7 +90,6 @@ const TopNav = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    toast.success("Logged out successfully");
     navigate("/login");
   };
 

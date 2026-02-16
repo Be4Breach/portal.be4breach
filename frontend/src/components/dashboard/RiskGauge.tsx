@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { statsData } from "@/data/mockData";
-
-const score = statsData.riskScore;
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 const getColor = (s: number) => {
   if (s <= 40) return "hsl(142, 71%, 45%)";
@@ -17,6 +16,18 @@ const getLabel = (s: number) => {
 };
 
 const RiskGauge = () => {
+  const { data, loading, error } = useDashboardData();
+
+  if (loading || !data) {
+    return (
+      <Card className="p-5 animate-fade-in animate-fade-in-delay-4 flex flex-col items-center">
+        <h3 className="text-sm font-semibold mb-2 self-start">Risk Score</h3>
+        <Skeleton className="h-32 w-full" />
+      </Card>
+    );
+  }
+
+  const score = data.statsData.riskScore;
   const angle = (score / 100) * 180;
   const color = getColor(score);
   const r = 70;
@@ -30,6 +41,7 @@ const RiskGauge = () => {
   return (
     <Card className="p-5 animate-fade-in animate-fade-in-delay-4 flex flex-col items-center">
       <h3 className="text-sm font-semibold mb-2 self-start">Risk Score</h3>
+      {error && <p className="text-xs text-destructive mb-2 self-start">Failed to load latest data: {error}</p>}
       <svg viewBox="0 0 180 110" className="w-48 h-auto">
         {/* Background arc */}
         <path

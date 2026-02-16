@@ -1,30 +1,62 @@
 import { Card } from "@/components/ui/card";
-import { geoThreatData } from "@/data/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { useState } from "react";
+import worldMap from "@/assets/world-map.jpg";
+
+// Map dimensions must match the SVG viewBox
+const MAP_WIDTH = 800;
+const MAP_HEIGHT = 400;
+// Calibrate padding to align dots with the background image (tweak if you change the map asset)
+const PAD_X = 24;
+const PAD_Y = 12;
+const OFFSET_X = -6; // fine-tune horizontal alignment (negative = left)
+const OFFSET_Y = 6;  // fine-tune vertical alignment (positive = down)
 
 const mapToSvg = (lat: number, lng: number) => {
-  const x = ((lng + 180) / 360) * 800;
-  const y = ((90 - lat) / 180) * 400;
+  const x = PAD_X + ((lng + 180) / 360) * (MAP_WIDTH - PAD_X * 2) + OFFSET_X;
+  const y = PAD_Y + ((90 - lat) / 180) * (MAP_HEIGHT - PAD_Y * 2) + OFFSET_Y;
   return { x, y };
 };
 
 const ThreatMap = () => {
+  const { data, loading } = useDashboardData();
   const [hovered, setHovered] = useState<string | null>(null);
+
+  if (loading || !data) {
+    return (
+      <Card className="p-5 animate-fade-in animate-fade-in-delay-4">
+        <h3 className="text-sm font-semibold mb-4">Geographical Threat Origins</h3>
+        <div className="h-64 flex items-center justify-center">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-5 animate-fade-in animate-fade-in-delay-4">
       <h3 className="text-sm font-semibold mb-4">Geographical Threat Origins</h3>
-      <div className="relative overflow-hidden rounded-lg bg-secondary/50">
-        <svg viewBox="0 0 800 400" className="w-full h-auto">
-          {/* Simplified continent outlines */}
-          <ellipse cx="200" cy="180" rx="90" ry="70" fill="hsl(0,0%,88%)" opacity={0.6} />
-          <ellipse cx="380" cy="160" rx="70" ry="80" fill="hsl(0,0%,88%)" opacity={0.6} />
-          <ellipse cx="420" cy="280" rx="40" ry="50" fill="hsl(0,0%,88%)" opacity={0.6} />
-          <ellipse cx="530" cy="180" rx="100" ry="70" fill="hsl(0,0%,88%)" opacity={0.6} />
-          <ellipse cx="650" cy="280" rx="50" ry="40" fill="hsl(0,0%,88%)" opacity={0.6} />
-          <ellipse cx="270" cy="300" rx="50" ry="60" fill="hsl(0,0%,88%)" opacity={0.6} />
+      <div className="relative overflow-hidden rounded-lg bg-secondary/40">
+        <svg viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} className="w-full h-auto">
+          <defs>
+            <pattern id="mapTexture" patternUnits="userSpaceOnUse" width={MAP_WIDTH} height={MAP_HEIGHT}>
+              <image
+                href={worldMap}
+                x="0"
+                y="0"
+                width={MAP_WIDTH}
+                height={MAP_HEIGHT}
+                opacity="0.35"
+                preserveAspectRatio="xMidYMid slice"
+              />
+            </pattern>
+          </defs>
 
-          {geoThreatData.map((point) => {
+          {/* Map background */}
+          <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#mapTexture)" />
+
+          {data.geoThreatData.map((point) => {
             const { x, y } = mapToSvg(point.lat, point.lng);
             const r = 4 + point.intensity * 12;
             return (
@@ -38,7 +70,7 @@ const ThreatMap = () => {
                   cy={y}
                   r={r}
                   fill={`hsl(0, 72%, ${60 - point.intensity * 25}%)`}
-                  opacity={0.8}
+                  opacity={0.85}
                   className="cursor-pointer transition-all"
                   onMouseEnter={() => setHovered(point.country)}
                   onMouseLeave={() => setHovered(null)}

@@ -1,0 +1,255 @@
+{
+  "threatTrendsData": [
+    {
+      "date": "Feb 1",
+      "critical": 12,
+      "high": 25,
+      "medium": 35,
+      "low": 28
+    },
+    {
+      "date": "Feb 2",
+      "critical": 8,
+      "high": 22,
+      "medium": 42,
+      "low": 32
+    },
+    {
+      "date": "Feb 3",
+      "critical": 15,
+      "high": 28,
+      "medium": 38,
+      "low": 25
+    },
+    {
+      "date": "Feb 4",
+      "critical": 10,
+      "high": 20,
+      "medium": 45,
+      "low": 30
+    },
+    {
+      "date": "Feb 5",
+      "critical": 14,
+      "high": 26,
+      "medium": 40,
+      "low": 27
+    },
+    {
+      "date": "Feb 6",
+      "critical": 9,
+      "high": 24,
+      "medium": 37,
+      "low": 31
+    },
+    {
+      "date": "Feb 7",
+      "critical": 11,
+      "high": 23,
+      "medium": 41,
+      "low": 29
+    },
+    {
+      "date": "Feb 8",
+      "critical": 13,
+      "high": 27,
+      "medium": 39,
+      "low": 26
+    },
+    {
+      "date": "Feb 9",
+      "critical": 7,
+      "high": 21,
+      "medium": 43,
+      "low": 33
+    },
+    {
+      "date": "Feb 10",
+      "critical": 16,
+      "high": 29,
+      "medium": 36,
+      "low": 24
+    },
+    {
+      "date": "Feb 11",
+      "critical": 12,
+      "high": 25,
+      "medium": 35,
+      "low": 28
+    },
+    {
+      "date": "Feb 12",
+      "critical": 8,
+      "high": 22,
+      "medium": 42,
+      "low": 32
+    },
+    {
+      "date": "Feb 13",
+      "critical": 15,
+      "high": 28,
+      "medium": 38,
+      "low": 25
+    },
+    {
+      "date": "Feb 14",
+      "critical": 10,
+      "high": 20,
+      "medium": 45,
+      "low": 30
+    },
+    {
+      "date": "Feb 15",
+      "critical": 14,
+      "high": 26,
+      "medium": 40,
+      "low": 27
+    },
+    {
+      "date": "Feb 16",
+      "critical": 9,
+      "high": 24,
+      "medium": 37,
+      "low": 31
+    },
+    {
+      "date": "Feb 17",
+      "critical": 11,
+      "high": 23,
+      "medium": 41,
+      "low": 29
+    },
+    {
+      "date": "Feb 18",
+      "critical": 13,
+      "high": 27,
+      "medium": 39,
+      "low": 26
+    },
+    {
+      "date": "Feb 19",
+      "critical": 7,
+      "high": 21,
+      "medium": 43,
+      "low": 33
+    },
+    {
+      "date": "Feb 20",
+      "critical": 16,
+      "high": 29,
+      "medium": 36,
+      "low": 24
+    },
+    {
+      "date": "Feb 21",
+      "critical": 12,
+      "high": 25,
+      "medium": 35,
+      "low": 28
+    },
+    {
+      "date": "Feb 22",
+      "critical": 8,
+      "high": 22,
+      "medium": 42,
+      "low": 32
+    },
+    {
+      "date": "Feb 23",
+      "critical": 15,
+      "high": 28,
+      "medium": 38,
+      "low": 25
+    },
+    {
+      "date": "Feb 24",
+      "critical": 10,
+      "high": 20,
+      "medium": 45,
+      "low": 30
+    },
+    {
+      "date": "Feb 25",
+      "critical": 14,
+      "high": 26,
+      "medium": 40,
+      "low": 27
+    },
+    {
+      "date": "Feb 26",
+      "critical": 9,
+      "high": 24,
+      "medium": 37,
+      "low": 31
+    },
+    {
+      "date": "Feb 27",
+      "critical": 11,
+      "high": 23,
+      "medium": 41,
+      "low": 29
+    },
+    {
+      "date": "Feb 28",
+      "critical": 13,
+      "high": 27,
+      "medium": 39,
+      "low": 26
+    },
+    {
+      "date": "Feb 29",
+      "critical": 7,
+      "high": 21,
+      "medium": 43,
+      "low": 33
+    },
+    {
+      "date": "Mar 1",
+      "critical": 16,
+      "high": 29,
+      "medium": 36,
+      "low": 24
+    }
+  ],
+  "severityData": [
+    { "name": "Critical", "value": 47, "color": "hsl(0, 72%, 51%)" },
+    { "name": "High", "value": 128, "color": "hsl(25, 95%, 53%)" },
+    { "name": "Medium", "value": 312, "color": "hsl(45, 93%, 47%)" },
+    { "name": "Low", "value": 198, "color": "hsl(0, 0%, 64%)" }
+  ],
+  "attackVectorsData": [
+    { "name": "Phishing", "count": 342 },
+    { "name": "Ransomware", "count": 187 },
+    { "name": "Malware", "count": 256 },
+    { "name": "Zero-Day", "count": 43 },
+    { "name": "Insider Threat", "count": 89 }
+  ],
+  "geoThreatData": [
+    { "country": "United States", "lat": 39, "lng": -98, "count": 1243, "intensity": 0.9 },
+    { "country": "Russia", "lat": 60, "lng": 100, "count": 987, "intensity": 0.85 },
+    { "country": "China", "lat": 35, "lng": 105, "count": 876, "intensity": 0.8 },
+    { "country": "Brazil", "lat": -14, "lng": -51, "count": 432, "intensity": 0.5 },
+    { "country": "India", "lat": 20, "lng": 77, "count": 654, "intensity": 0.65 },
+    { "country": "Germany", "lat": 51, "lng": 10, "count": 321, "intensity": 0.4 },
+    { "country": "Nigeria", "lat": 10, "lng": 8, "count": 287, "intensity": 0.35 },
+    { "country": "Iran", "lat": 32, "lng": 53, "count": 543, "intensity": 0.6 },
+    { "country": "North Korea", "lat": 40, "lng": 127, "count": 234, "intensity": 0.3 },
+    { "country": "Ukraine", "lat": 49, "lng": 32, "count": 198, "intensity": 0.25 },
+    { "country": "UK", "lat": 54, "lng": -2, "count": 176, "intensity": 0.2 },
+    { "country": "Japan", "lat": 36, "lng": 138, "count": 145, "intensity": 0.18 }
+  ],
+  "recentAlerts": [
+    { "id": 1, "name": "APT-29 Activity Detected", "source": "Network IDS", "severity": "Critical", "time": "2 min ago", "description": "Advanced persistent threat group activity on perimeter" },
+    { "id": 2, "name": "Suspicious Login Attempt", "source": "Auth System", "severity": "High", "time": "8 min ago", "description": "Multiple failed login attempts from unknown IP" },
+    { "id": 3, "name": "Malware Signature Match", "source": "Endpoint", "severity": "High", "time": "15 min ago", "description": "Known malware signature detected on workstation" },
+    { "id": 4, "name": "Unusual Data Transfer", "source": "DLP", "severity": "Medium", "time": "23 min ago", "description": "Large file transfer to external destination" },
+    { "id": 5, "name": "Certificate Expiry Warning", "source": "PKI", "severity": "Low", "time": "1 hr ago", "description": "SSL certificate expiring in 14 days" },
+    { "id": 6, "name": "Port Scan Detected", "source": "Firewall", "severity": "Medium", "time": "2 hr ago", "description": "Sequential port scanning from external IP" }
+  ],
+  "statsData": {
+    "totalThreats": { "value": 2847, "change": 12.5, "trend": "up" },
+    "criticalAlerts": { "value": 47, "change": -8.3, "trend": "down" },
+    "systemsMonitored": { "value": 1284, "change": 3.2, "trend": "up" },
+    "riskScore": 72
+  }
+}

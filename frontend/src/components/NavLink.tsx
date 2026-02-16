@@ -1,10 +1,8 @@
-import { NavLink as RouterNavLink } from "react-router-dom";
+import { NavLink as RouterNavLink, NavLinkProps } from "react-router-dom";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-type RouterNavLinkProps = React.ComponentProps<typeof RouterNavLink>;
-
-interface NavLinkCompatProps extends Omit<RouterNavLinkProps, "className"> {
+interface NavLinkCompatProps extends Omit<NavLinkProps, "className"> {
   className?: string;
   activeClassName?: string;
   pendingClassName?: string;
