@@ -12,4 +12,3 @@ requests
 python-dateutil
 jinja2
 httpx
-semgrep
