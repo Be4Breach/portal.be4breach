@@ -11,6 +11,9 @@ client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DETAILS)
 database = client.be4breach
 
 user_collection = database.get_collection("users")
+scans_collection = database.get_collection("scans")
+findings_collection = database.get_collection("findings")
+
 
 # Helper function to serialize Mongo document to Pydantic model friendly dict
 def user_helper(user) -> dict:

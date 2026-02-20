@@ -1,214 +1,214 @@
 {
   "threatTrendsData": [
     {
-      "date": "Jan 18",
-      "critical": 1,
+      "date": "Jan 22",
+      "critical": 0,
       "high": 10,
-      "medium": 17,
+      "medium": 13,
       "low": 19
     },
     {
-      "date": "Jan 19",
-      "critical": 0,
-      "high": 10,
-      "medium": 11,
-      "low": 22
-    },
-    {
-      "date": "Jan 20",
-      "critical": 0,
-      "high": 5,
-      "medium": 16,
-      "low": 21
-    },
-    {
-      "date": "Jan 21",
-      "critical": 0,
-      "high": 10,
-      "medium": 11,
-      "low": 23
-    },
-    {
-      "date": "Jan 22",
+      "date": "Jan 23",
       "critical": 1,
-      "high": 9,
-      "medium": 11,
+      "high": 8,
+      "medium": 12,
       "low": 20
     },
     {
-      "date": "Jan 23",
-      "critical": 0,
-      "high": 8,
-      "medium": 10,
-      "low": 17
-    },
-    {
       "date": "Jan 24",
-      "critical": 0,
-      "high": 5,
-      "medium": 20,
-      "low": 17
+      "critical": 1,
+      "high": 10,
+      "medium": 12,
+      "low": 16
     },
     {
       "date": "Jan 25",
       "critical": 0,
-      "high": 5,
-      "medium": 18,
-      "low": 22
-    },
-    {
-      "date": "Jan 26",
-      "critical": 1,
-      "high": 7,
-      "medium": 19,
-      "low": 20
-    },
-    {
-      "date": "Jan 27",
-      "critical": 0,
       "high": 10,
-      "medium": 19,
+      "medium": 14,
       "low": 18
     },
     {
-      "date": "Jan 28",
+      "date": "Jan 26",
       "critical": 0,
-      "high": 6,
-      "medium": 11,
+      "high": 5,
+      "medium": 14,
       "low": 21
+    },
+    {
+      "date": "Jan 27",
+      "critical": 1,
+      "high": 5,
+      "medium": 11,
+      "low": 23
+    },
+    {
+      "date": "Jan 28",
+      "critical": 1,
+      "high": 8,
+      "medium": 12,
+      "low": 20
     },
     {
       "date": "Jan 29",
       "critical": 0,
       "high": 7,
-      "medium": 20,
-      "low": 25
+      "medium": 15,
+      "low": 16
     },
     {
       "date": "Jan 30",
       "critical": 1,
-      "high": 8,
-      "medium": 19,
-      "low": 21
+      "high": 10,
+      "medium": 17,
+      "low": 23
     },
     {
       "date": "Jan 31",
-      "critical": 1,
-      "high": 8,
+      "critical": 0,
+      "high": 6,
       "medium": 20,
-      "low": 21
+      "low": 20
     },
     {
       "date": "Feb 01",
       "critical": 0,
-      "high": 10,
-      "medium": 14,
-      "low": 15
+      "high": 9,
+      "medium": 20,
+      "low": 22
     },
     {
       "date": "Feb 02",
-      "critical": 0,
-      "high": 7,
-      "medium": 20,
-      "low": 24
+      "critical": 1,
+      "high": 8,
+      "medium": 17,
+      "low": 21
     },
     {
       "date": "Feb 03",
-      "critical": 0,
-      "high": 7,
-      "medium": 17,
+      "critical": 1,
+      "high": 5,
+      "medium": 19,
       "low": 20
     },
     {
       "date": "Feb 04",
       "critical": 0,
-      "high": 8,
-      "medium": 15,
-      "low": 25
+      "high": 5,
+      "medium": 14,
+      "low": 15
     },
     {
       "date": "Feb 05",
-      "critical": 1,
-      "high": 8,
-      "medium": 20,
-      "low": 16
+      "critical": 0,
+      "high": 6,
+      "medium": 11,
+      "low": 19
     },
     {
       "date": "Feb 06",
-      "critical": 1,
-      "high": 6,
-      "medium": 12,
-      "low": 20
+      "critical": 0,
+      "high": 7,
+      "medium": 17,
+      "low": 22
     },
     {
       "date": "Feb 07",
       "critical": 0,
       "high": 8,
-      "medium": 10,
+      "medium": 20,
       "low": 25
     },
     {
       "date": "Feb 08",
       "critical": 0,
-      "high": 9,
-      "medium": 12,
+      "high": 10,
+      "medium": 20,
       "low": 22
     },
     {
       "date": "Feb 09",
-      "critical": 1,
-      "high": 10,
-      "medium": 15,
-      "low": 23
+      "critical": 0,
+      "high": 9,
+      "medium": 19,
+      "low": 15
     },
     {
       "date": "Feb 10",
       "critical": 1,
-      "high": 6,
-      "medium": 20,
-      "low": 19
+      "high": 5,
+      "medium": 16,
+      "low": 22
     },
     {
       "date": "Feb 11",
       "critical": 0,
-      "high": 8,
-      "medium": 15,
-      "low": 24
+      "high": 5,
+      "medium": 11,
+      "low": 16
     },
     {
       "date": "Feb 12",
-      "critical": 1,
-      "high": 10,
-      "medium": 17,
-      "low": 22
+      "critical": 0,
+      "high": 8,
+      "medium": 20,
+      "low": 19
     },
     {
       "date": "Feb 13",
       "critical": 1,
-      "high": 9,
-      "medium": 17,
-      "low": 17
+      "high": 5,
+      "medium": 20,
+      "low": 21
     },
     {
       "date": "Feb 14",
-      "critical": 1,
-      "high": 8,
-      "medium": 18,
-      "low": 17
-    },
-    {
-      "date": "Feb 15",
       "critical": 0,
       "high": 8,
-      "medium": 11,
+      "medium": 19,
       "low": 25
     },
     {
+      "date": "Feb 15",
+      "critical": 1,
+      "high": 8,
+      "medium": 14,
+      "low": 20
+    },
+    {
       "date": "Feb 16",
+      "critical": 1,
+      "high": 7,
+      "medium": 15,
+      "low": 24
+    },
+    {
+      "date": "Feb 17",
+      "critical": 0,
+      "high": 6,
+      "medium": 12,
+      "low": 21
+    },
+    {
+      "date": "Feb 18",
+      "critical": 1,
+      "high": 9,
+      "medium": 11,
+      "low": 21
+    },
+    {
+      "date": "Feb 19",
+      "critical": 0,
+      "high": 8,
+      "medium": 16,
+      "low": 20
+    },
+    {
+      "date": "Feb 20",
       "critical": 0,
       "high": 10,
-      "medium": 12,
-      "low": 18
+      "medium": 16,
+      "low": 15
     }
   ],
   "severityData": [
@@ -224,12 +224,12 @@
     },
     {
       "name": "Medium",
-      "value": 165,
+      "value": 188,
       "color": "hsl(45, 93%, 47%)"
     },
     {
       "name": "Low",
-      "value": 246,
+      "value": 214,
       "color": "hsl(0, 0%, 64%)"
     }
   ],
@@ -248,153 +248,153 @@
       "country": "United States",
       "lat": 39,
       "lng": -98,
-      "count": 1436,
+      "count": 1163,
       "intensity": 0.9
     },
     {
       "country": "Russia",
       "lat": 60,
       "lng": 100,
-      "count": 965,
+      "count": 1148,
       "intensity": 0.85
     },
     {
       "country": "China",
       "lat": 35,
       "lng": 105,
-      "count": 941,
+      "count": 778,
       "intensity": 0.8
     },
     {
       "country": "Brazil",
       "lat": -14,
       "lng": -51,
-      "count": 393,
+      "count": 445,
       "intensity": 0.5
     },
     {
       "country": "India",
       "lat": 20,
       "lng": 77,
-      "count": 546,
+      "count": 577,
       "intensity": 0.65
     },
     {
       "country": "Germany",
       "lat": 51,
       "lng": 10,
-      "count": 285,
+      "count": 272,
       "intensity": 0.4
     },
     {
       "country": "Nigeria",
       "lat": 10,
       "lng": 8,
-      "count": 290,
+      "count": 292,
       "intensity": 0.35
     },
     {
       "country": "Iran",
       "lat": 32,
       "lng": 53,
-      "count": 433,
+      "count": 656,
       "intensity": 0.6
     },
     {
       "country": "North Korea",
       "lat": 40,
       "lng": 127,
-      "count": 196,
+      "count": 179,
       "intensity": 0.3
     },
     {
       "country": "Ukraine",
       "lat": 49,
       "lng": 32,
-      "count": 166,
+      "count": 244,
       "intensity": 0.25
     },
     {
       "country": "UK",
       "lat": 54,
       "lng": -2,
-      "count": 108,
+      "count": 190,
       "intensity": 0.2
     },
     {
       "country": "Japan",
       "lat": 36,
       "lng": 138,
-      "count": 148,
+      "count": 100,
       "intensity": 0.18
     }
   ],
   "recentAlerts": [
     {
       "id": 1,
-      "name": "CVE CVE-2026-1731 Actively Exploited",
+      "name": "CVE CVE-2021-22175 Actively Exploited",
       "source": "CISA KEV",
       "severity": "Critical",
-      "time": "2026-02-13",
-      "description": "BeyondTrust Remote Support (RS) and Privileged Remote Access (PRA)contain an OS command injection vu..."
+      "time": "2026-02-18",
+      "description": "GitLab contains a server-side request forgery (SSRF) vulnerability when requests to the internal net..."
     },
     {
       "id": 2,
-      "name": "CVE CVE-2026-20700 Actively Exploited",
+      "name": "CVE CVE-2026-22769 Actively Exploited",
       "source": "CISA KEV",
       "severity": "Critical",
-      "time": "2026-02-12",
-      "description": "Apple iOS, macOS, tvOS, watchOS, and visionOS contain an improper restriction of operations within t..."
+      "time": "2026-02-18",
+      "description": "Dell RecoverPoint for Virtual Machines (RP4VMs) contains an use of hard-coded credentials vulnerabil..."
     },
     {
       "id": 3,
-      "name": "CVE CVE-2024-43468 Actively Exploited",
+      "name": "CVE CVE-2020-7796 Actively Exploited",
       "source": "CISA KEV",
       "severity": "Critical",
-      "time": "2026-02-12",
-      "description": "Microsoft Configuration Manager contains an SQL injection vulnerability. An unauthenticated attacker..."
+      "time": "2026-02-17",
+      "description": "Synacor Zimbra Collaboration Suite (ZCS) contains a server-side request forgery vulnerability if Web..."
     },
     {
       "id": 4,
-      "name": "New Chrome Zero-Day (CVE-2026-2441) Under Active A...",
+      "name": "PromptSpy Android Malware Abuses Gemini AI to Auto...",
       "source": "The Hacker News",
       "severity": "High",
-      "time": "2026-02-16",
-      "description": "Google on Friday released security updates for its Chrome browser to address a security flaw that it..."
+      "time": "2026-02-19",
+      "description": "Cybersecurity researchers have discovered what they say is the first Android malware that abuses Gem..."
     },
     {
       "id": 5,
-      "name": "Microsoft Discloses DNS-Based ClickFix Attack Usin...",
+      "name": "INTERPOL Operation Red Card 2.0 Arrests 651 in Afr...",
       "source": "The Hacker News",
       "severity": "High",
-      "time": "2026-02-15",
-      "description": "Microsoft has disclosed details of a new version of the ClickFix social engineering tactic in which ..."
+      "time": "2026-02-19",
+      "description": "An international cybercrime operation against online scams has led to 651 arrests and recovered more..."
     },
     {
       "id": 6,
-      "name": "Google Ties Suspected Russian Actor to CANFAIL Mal...",
+      "name": "Microsoft Patches CVE-2026-26119 Privilege Escalat...",
       "source": "The Hacker News",
       "severity": "High",
-      "time": "2026-02-13",
-      "description": "A previously undocumented threat actor has been attributed to attacks targeting Ukrainian organizati..."
+      "time": "2026-02-19",
+      "description": "Microsoft has disclosed a now-patched security flaw in Windows Admin Center that could allow an atta..."
     }
   ],
   "statsData": {
     "totalThreats": {
-      "value": 1593,
-      "change": 3,
+      "value": 1599,
+      "change": -6,
       "trend": "down"
     },
     "criticalAlerts": {
-      "value": 1518,
-      "change": -20,
-      "trend": "up"
+      "value": 1524,
+      "change": 3,
+      "trend": "down"
     },
     "systemsMonitored": {
-      "value": 1202,
-      "change": 1,
+      "value": 1229,
+      "change": 2,
       "trend": "up"
     },
-    "riskScore": 67
+    "riskScore": 70
   }
 }
