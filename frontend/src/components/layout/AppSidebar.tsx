@@ -1,10 +1,11 @@
-import { LayoutDashboard, Shield, BarChart3, AlertTriangle, FileText, Settings, Github, X, UserCog } from "lucide-react";
+import { LayoutDashboard, Shield, BarChart3, AlertTriangle, FileText, Settings, Github, X, UserCog, ShieldCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { title: "Compliance", icon: ShieldCheck, path: "/compliance" },
   { title: "Repositories", icon: Github, path: "/repositories" },
   { title: "Threats", icon: Shield, path: "/threats" },
   { title: "Analytics", icon: BarChart3, path: "/analytics" },

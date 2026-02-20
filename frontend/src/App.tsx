@@ -16,6 +16,7 @@ import RepositoriesPage from "@/pages/RepositoriesPage";
 import ScanPage from "@/pages/ScanPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/NotFound";
+import Compliance from "@/pages/Compliance";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function App() {
             <Route path="threats" element={<Threats />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="compliance" element={<Compliance />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="scan/:owner/:repo" element={<ScanPage />} />
             <Route path="*" element={<NotFound />} />
