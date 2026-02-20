@@ -339,8 +339,8 @@ async def api_generate(request: GenerateRequest):
         html, dataset = generate_newsletter(month_override=month)
         
         # Save to file
-        os.makedirs("newsletter_cache", exist_ok=True)
-        with open("newsletter_cache/newsletter_preview.html", "w", encoding="utf-8") as f:
+        os.makedirs("/tmp/newsletter_cache", exist_ok=True)
+        with open("/tmp/newsletter_cache/newsletter_preview.html", "w", encoding="utf-8") as f:
             f.write(html)
 
         # Also generate dashboard data JSON file for React app
@@ -351,7 +351,7 @@ async def api_generate(request: GenerateRequest):
                 dataset["aggregated"],
             )
             # Keep API cache in sync so the dashboard sees fresh data immediately
-            cache_file = "newsletter_cache/dashboard_data.json"
+            cache_file = "/tmp/newsletter_cache/dashboard_data.json"
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(dashboard_data, f, indent=2)
             print(f"✅ Dashboard data refreshed at {cache_file}")
@@ -371,7 +371,7 @@ async def api_generate(request: GenerateRequest):
 async def preview():
     """Preview the generated newsletter"""
     try:
-        preview_file = "newsletter_cache/newsletter_preview.html"
+        preview_file = "/tmp/newsletter_cache/newsletter_preview.html"
         if os.path.exists(preview_file):
             with open(preview_file, "r", encoding="utf-8") as f:
                 return f.read()
@@ -435,7 +435,7 @@ async def api_stats():
 async def api_dashboard_data():
     """Get dashboard data, regenerating if cache is stale (>1 hour)"""
     try:
-        cache_file = "newsletter_cache/dashboard_data.json"
+        cache_file = "/tmp/newsletter_cache/dashboard_data.json"
         cache_age_limit = timedelta(hours=1)
 
         # Check if cache exists and is fresh
@@ -455,7 +455,7 @@ async def api_dashboard_data():
         )
 
         # Cache the data
-        os.makedirs("newsletter_cache", exist_ok=True)
+        os.makedirs("/tmp/newsletter_cache", exist_ok=True)
         with open(cache_file, "w", encoding="utf-8") as f:
             json.dump(dashboard_data, f, indent=2)
 
@@ -469,7 +469,7 @@ async def api_dashboard_data():
 async def api_dashboard_data_cached():
     """Get cached dashboard data without regeneration"""
     try:
-        cache_file = "newsletter_cache/dashboard_data.json"
+        cache_file = "/tmp/newsletter_cache/dashboard_data.json"
 
         if os.path.exists(cache_file):
             with open(cache_file, "r", encoding="utf-8") as f:
