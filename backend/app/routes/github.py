@@ -190,16 +190,16 @@ async def github_connect(auth_token: str = ""):
 
     import urllib.parse
 
-    # GitHub Apps: redirect to the App's installation page.
-    # After the user installs (or if already installed, re-authorises),
-    # GitHub redirects to our callback URL with `code` and `state` set just
-    # as in a normal OAuth flow — so the /callback handler works unchanged.
-    # The `state` param is forwarded through the install flow automatically.
-    state = urllib.parse.quote(f"connect:{email}", safe="")
-    github_auth_url = (
-        f"https://github.com/apps/{GITHUB_APP_SLUG}/installations/new"
-        f"?state={state}"
-    )
+    # Now that "Request user authorization (OAuth) during installation" is enabled
+    # on the GitHub App, /login/oauth/authorize accepts requests and honours an
+    # explicit redirect_uri — so the correct callback URL is picked per environment
+    # via the GITHUB_REDIRECT_URI env var (localhost in dev, Vercel URL in prod).
+    params = {
+        "client_id": GITHUB_CLIENT_ID,
+        "redirect_uri": GITHUB_REDIRECT_URI,
+        "state": f"connect:{email}",
+    }
+    github_auth_url = f"https://github.com/login/oauth/authorize?{urllib.parse.urlencode(params)}"
     return RedirectResponse(url=github_auth_url)
 
 
