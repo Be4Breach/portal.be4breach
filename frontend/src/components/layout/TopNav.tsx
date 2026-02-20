@@ -37,19 +37,31 @@ const TopNav = ({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) => {
 
   const notifications = (data?.recentAlerts ?? []).slice(0, 3);
 
-  // Generate initials from name or email
+  // Generate initials: prefer registration name, then email, then GitHub
   const getInitials = () => {
+    if (user?.first_name) {
+      const last = user.last_name ?? "";
+      return last
+        ? `${user.first_name[0]}${last[0]}`.toUpperCase()
+        : user.first_name.substring(0, 2).toUpperCase();
+    }
+    if (user?.email) return user.email.substring(0, 2).toUpperCase();
     if (user?.github_name) {
       const parts = user.github_name.split(" ");
       return parts.length > 1
         ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
         : user.github_name.substring(0, 2).toUpperCase();
     }
-    if (user?.email) return user.email.substring(0, 2).toUpperCase();
     return "U";
   };
 
-  const getDisplayName = () => user?.github_name || user?.github_login || user?.email?.split("@")[0] || "User";
+  // Display name: prefer registration name, then email prefix, then GitHub
+  const getDisplayName = () => {
+    if (user?.first_name) {
+      return `${user.first_name}${user.last_name ? " " + user.last_name : ""}`;
+    }
+    return user?.email?.split("@")[0] || user?.github_name || user?.github_login || "User";
+  };
 
   const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && search.trim()) {
@@ -153,11 +165,7 @@ const TopNav = ({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="h-8 w-8 rounded-full overflow-hidden bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity border border-border">
-              {user?.github_avatar ? (
-                <img src={user.github_avatar} alt={getDisplayName()} className="h-full w-full object-cover" />
-              ) : (
-                getInitials()
-              )}
+              {getInitials()}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

@@ -14,9 +14,7 @@ import {
     ExternalLink,
     Code2,
     Clock,
-    Filter,
     ChevronDown,
-    BookOpen,
     Shield,
     Settings,
     ArrowRight,
@@ -390,7 +388,7 @@ export default function RepositoriesPage() {
                             {isLoading
                                 ? "Loading repositories…"
                                 : stats
-                                    ? `${stats.total} repos · ${stats.public} public · ${stats.private} private · ${stats.languages} languages`
+                                    ? `${stats.total} repos · ${stats.languages} languages`
                                     : ""}
                         </p>
                     </div>
@@ -406,32 +404,6 @@ export default function RepositoriesPage() {
                     Refresh
                 </button>
             </div>
-
-            {/* ── Stats row ───────────────────────────────────────────────────── */}
-            {stats && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                        { label: "Total Repos", value: stats.total, icon: BookOpen },
-                        { label: "Public", value: stats.public, icon: Unlock },
-                        { label: "Private", value: stats.private, icon: Lock },
-                        { label: "Total Stars", value: stats.totalStars, icon: Star },
-                    ].map(({ label, value, icon: Icon }) => (
-                        <div
-                            key={label}
-                            className="flex items-center gap-3 p-4 rounded-xl border bg-card"
-                        >
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                <Icon className="h-4 w-4 text-primary" />
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold leading-none">{value}</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
             {/* ── Filters & search ────────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row gap-3">
                 {/* Search */}
@@ -445,23 +417,6 @@ export default function RepositoriesPage() {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-
-                {/* Visibility filter */}
-                <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                    <select
-                        id="visibility-filter"
-                        value={visibility}
-                        onChange={(e) => setVisibility(e.target.value as VisibilityFilter)}
-                        className="h-9 pl-8 pr-8 rounded-md border bg-secondary text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
-                    >
-                        <option value="all">All</option>
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                </div>
-
                 {/* Language filter */}
                 {languages.length > 0 && (
                     <div className="relative">

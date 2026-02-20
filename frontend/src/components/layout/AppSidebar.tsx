@@ -7,10 +7,10 @@ const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
   { title: "Compliance", icon: ShieldCheck, path: "/compliance" },
   { title: "Repositories", icon: Github, path: "/repositories" },
+  { title: "Reports", icon: FileText, path: "/reports" },
   { title: "Threats", icon: Shield, path: "/threats" },
   { title: "Analytics", icon: BarChart3, path: "/analytics" },
   { title: "Alerts", icon: AlertTriangle, path: "/alerts" },
-  { title: "Reports", icon: FileText, path: "/reports" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 

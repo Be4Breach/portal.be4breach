@@ -15,6 +15,7 @@ GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 GITHUB_REDIRECT_URI = os.getenv("GITHUB_REDIRECT_URI", "http://localhost:8000/api/github/callback")
 GITHUB_CONNECT_URI = os.getenv("GITHUB_CONNECT_URI", "http://localhost:8000/api/github/connect/callback")
+GITHUB_APP_SLUG = os.getenv("GITHUB_APP_SLUG", "portal-be4breach")  # slug from github.com/settings/apps/<slug>
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
@@ -56,13 +57,16 @@ async def github_login():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="GitHub OAuth is not configured. Set GITHUB_CLIENT_ID in environment.",
         )
-    scope = "read:user user:email repo"
-    github_auth_url = (
-        f"https://github.com/login/oauth/authorize"
-        f"?client_id={GITHUB_CLIENT_ID}"
-        f"&redirect_uri={GITHUB_REDIRECT_URI}"
-        f"&scope={scope}"
-    )
+    # For GitHub Apps, send users directly to the app's OAuth authorize page.
+    # (Works for users who have already installed the app.)
+    # For first-time installs, the client should link to
+    # https://github.com/apps/{GITHUB_APP_SLUG}/installations/new
+    import urllib.parse
+    params = {
+        "client_id": GITHUB_CLIENT_ID,
+        "redirect_uri": GITHUB_REDIRECT_URI,
+    }
+    github_auth_url = f"https://github.com/login/oauth/authorize?{urllib.parse.urlencode(params)}"
     return RedirectResponse(url=github_auth_url)
 
 
@@ -184,15 +188,17 @@ async def github_connect(auth_token: str = ""):
     if not email:
         raise HTTPException(status_code=401, detail="Could not determine user from token.")
 
-    scope = "read:user user:email repo"
-    # Reuse the registered redirect URI — encode 'connect:<email>' in state
-    # so /callback can distinguish a connect flow from a plain login.
+    import urllib.parse
+
+    # GitHub Apps: redirect to the App's installation page.
+    # After the user installs (or if already installed, re-authorises),
+    # GitHub redirects to our callback URL with `code` and `state` set just
+    # as in a normal OAuth flow — so the /callback handler works unchanged.
+    # The `state` param is forwarded through the install flow automatically.
+    state = urllib.parse.quote(f"connect:{email}", safe="")
     github_auth_url = (
-        f"https://github.com/login/oauth/authorize"
-        f"?client_id={GITHUB_CLIENT_ID}"
-        f"&redirect_uri={GITHUB_REDIRECT_URI}"
-        f"&scope={scope}"
-        f"&state=connect:{email}"
+        f"https://github.com/apps/{GITHUB_APP_SLUG}/installations/new"
+        f"?state={state}"
     )
     return RedirectResponse(url=github_auth_url)
 

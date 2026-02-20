@@ -28,7 +28,9 @@ export default function SettingsPage() {
   };
 
   const displayName = user
-    ? user.github_name || `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email
+    ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+    || user.email
+    || user.github_name
     : "";
 
   return (
@@ -57,13 +59,9 @@ export default function SettingsPage() {
       {/* Profile card */}
       <div className="rounded-xl border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
-          {user?.github_avatar ? (
-            <img src={user.github_avatar} alt={displayName} className="h-12 w-12 rounded-full object-cover border" />
-          ) : (
-            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <User className="h-6 w-6 text-primary" />
-            </div>
-          )}
+          <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <User className="h-6 w-6 text-primary" />
+          </div>
           <div>
             <p className="font-semibold">{displayName}</p>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
