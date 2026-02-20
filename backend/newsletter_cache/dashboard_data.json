@@ -2,213 +2,213 @@
   "threatTrendsData": [
     {
       "date": "Jan 22",
-      "critical": 0,
-      "high": 10,
-      "medium": 13,
-      "low": 19
+      "critical": 1,
+      "high": 6,
+      "medium": 14,
+      "low": 16
     },
     {
       "date": "Jan 23",
       "critical": 1,
-      "high": 8,
-      "medium": 12,
-      "low": 20
+      "high": 5,
+      "medium": 15,
+      "low": 22
     },
     {
       "date": "Jan 24",
-      "critical": 1,
-      "high": 10,
-      "medium": 12,
+      "critical": 0,
+      "high": 8,
+      "medium": 13,
       "low": 16
     },
     {
       "date": "Jan 25",
-      "critical": 0,
-      "high": 10,
-      "medium": 14,
-      "low": 18
+      "critical": 1,
+      "high": 7,
+      "medium": 20,
+      "low": 22
     },
     {
       "date": "Jan 26",
       "critical": 0,
-      "high": 5,
-      "medium": 14,
-      "low": 21
+      "high": 9,
+      "medium": 13,
+      "low": 25
     },
     {
       "date": "Jan 27",
-      "critical": 1,
-      "high": 5,
-      "medium": 11,
-      "low": 23
+      "critical": 0,
+      "high": 7,
+      "medium": 12,
+      "low": 17
     },
     {
       "date": "Jan 28",
       "critical": 1,
-      "high": 8,
-      "medium": 12,
-      "low": 20
+      "high": 9,
+      "medium": 15,
+      "low": 25
     },
     {
       "date": "Jan 29",
-      "critical": 0,
-      "high": 7,
-      "medium": 15,
-      "low": 16
+      "critical": 1,
+      "high": 6,
+      "medium": 13,
+      "low": 17
     },
     {
       "date": "Jan 30",
       "critical": 1,
-      "high": 10,
-      "medium": 17,
-      "low": 23
+      "high": 6,
+      "medium": 13,
+      "low": 20
     },
     {
       "date": "Jan 31",
       "critical": 0,
-      "high": 6,
-      "medium": 20,
-      "low": 20
+      "high": 5,
+      "medium": 13,
+      "low": 17
     },
     {
       "date": "Feb 01",
-      "critical": 0,
+      "critical": 1,
       "high": 9,
-      "medium": 20,
+      "medium": 17,
       "low": 22
     },
     {
       "date": "Feb 02",
       "critical": 1,
-      "high": 8,
-      "medium": 17,
-      "low": 21
+      "high": 10,
+      "medium": 10,
+      "low": 18
     },
     {
       "date": "Feb 03",
-      "critical": 1,
-      "high": 5,
-      "medium": 19,
-      "low": 20
+      "critical": 0,
+      "high": 8,
+      "medium": 13,
+      "low": 19
     },
     {
       "date": "Feb 04",
       "critical": 0,
-      "high": 5,
-      "medium": 14,
-      "low": 15
+      "high": 7,
+      "medium": 19,
+      "low": 25
     },
     {
       "date": "Feb 05",
-      "critical": 0,
-      "high": 6,
-      "medium": 11,
-      "low": 19
+      "critical": 1,
+      "high": 5,
+      "medium": 17,
+      "low": 15
     },
     {
       "date": "Feb 06",
-      "critical": 0,
+      "critical": 1,
       "high": 7,
-      "medium": 17,
-      "low": 22
+      "medium": 11,
+      "low": 17
     },
     {
       "date": "Feb 07",
-      "critical": 0,
-      "high": 8,
-      "medium": 20,
+      "critical": 1,
+      "high": 7,
+      "medium": 15,
       "low": 25
     },
     {
       "date": "Feb 08",
-      "critical": 0,
+      "critical": 1,
       "high": 10,
-      "medium": 20,
-      "low": 22
+      "medium": 19,
+      "low": 16
     },
     {
       "date": "Feb 09",
-      "critical": 0,
+      "critical": 1,
       "high": 9,
-      "medium": 19,
-      "low": 15
+      "medium": 18,
+      "low": 17
     },
     {
       "date": "Feb 10",
       "critical": 1,
-      "high": 5,
-      "medium": 16,
-      "low": 22
+      "high": 7,
+      "medium": 11,
+      "low": 23
     },
     {
       "date": "Feb 11",
-      "critical": 0,
+      "critical": 1,
       "high": 5,
-      "medium": 11,
-      "low": 16
+      "medium": 13,
+      "low": 19
     },
     {
       "date": "Feb 12",
-      "critical": 0,
+      "critical": 1,
       "high": 8,
-      "medium": 20,
-      "low": 19
+      "medium": 16,
+      "low": 18
     },
     {
       "date": "Feb 13",
       "critical": 1,
-      "high": 5,
-      "medium": 20,
-      "low": 21
+      "high": 9,
+      "medium": 15,
+      "low": 22
     },
     {
       "date": "Feb 14",
-      "critical": 0,
-      "high": 8,
-      "medium": 19,
-      "low": 25
+      "critical": 1,
+      "high": 6,
+      "medium": 16,
+      "low": 16
     },
     {
       "date": "Feb 15",
-      "critical": 1,
-      "high": 8,
-      "medium": 14,
-      "low": 20
+      "critical": 0,
+      "high": 7,
+      "medium": 10,
+      "low": 22
     },
     {
       "date": "Feb 16",
-      "critical": 1,
-      "high": 7,
-      "medium": 15,
-      "low": 24
+      "critical": 0,
+      "high": 10,
+      "medium": 17,
+      "low": 18
     },
     {
       "date": "Feb 17",
-      "critical": 0,
-      "high": 6,
-      "medium": 12,
+      "critical": 1,
+      "high": 5,
+      "medium": 11,
       "low": 21
     },
     {
       "date": "Feb 18",
-      "critical": 1,
-      "high": 9,
-      "medium": 11,
+      "critical": 0,
+      "high": 6,
+      "medium": 19,
       "low": 21
     },
     {
       "date": "Feb 19",
       "critical": 0,
-      "high": 8,
-      "medium": 16,
-      "low": 20
+      "high": 9,
+      "medium": 17,
+      "low": 23
     },
     {
       "date": "Feb 20",
       "critical": 0,
       "high": 10,
-      "medium": 16,
-      "low": 15
+      "medium": 20,
+      "low": 18
     }
   ],
   "severityData": [
@@ -224,12 +224,12 @@
     },
     {
       "name": "Medium",
-      "value": 188,
+      "value": 146,
       "color": "hsl(45, 93%, 47%)"
     },
     {
       "name": "Low",
-      "value": 214,
+      "value": 206,
       "color": "hsl(0, 0%, 64%)"
     }
   ],
@@ -248,84 +248,84 @@
       "country": "United States",
       "lat": 39,
       "lng": -98,
-      "count": 1163,
+      "count": 1307,
       "intensity": 0.9
     },
     {
       "country": "Russia",
       "lat": 60,
       "lng": 100,
-      "count": 1148,
+      "count": 1069,
       "intensity": 0.85
     },
     {
       "country": "China",
       "lat": 35,
       "lng": 105,
-      "count": 778,
+      "count": 769,
       "intensity": 0.8
     },
     {
       "country": "Brazil",
       "lat": -14,
       "lng": -51,
-      "count": 445,
+      "count": 570,
       "intensity": 0.5
     },
     {
       "country": "India",
       "lat": 20,
       "lng": 77,
-      "count": 577,
+      "count": 747,
       "intensity": 0.65
     },
     {
       "country": "Germany",
       "lat": 51,
       "lng": 10,
-      "count": 272,
+      "count": 308,
       "intensity": 0.4
     },
     {
       "country": "Nigeria",
       "lat": 10,
       "lng": 8,
-      "count": 292,
+      "count": 207,
       "intensity": 0.35
     },
     {
       "country": "Iran",
       "lat": 32,
       "lng": 53,
-      "count": 656,
+      "count": 585,
       "intensity": 0.6
     },
     {
       "country": "North Korea",
       "lat": 40,
       "lng": 127,
-      "count": 179,
+      "count": 175,
       "intensity": 0.3
     },
     {
       "country": "Ukraine",
       "lat": 49,
       "lng": 32,
-      "count": 244,
+      "count": 161,
       "intensity": 0.25
     },
     {
       "country": "UK",
       "lat": 54,
       "lng": -2,
-      "count": 190,
+      "count": 105,
       "intensity": 0.2
     },
     {
       "country": "Japan",
       "lat": 36,
       "lng": 138,
-      "count": 100,
+      "count": 148,
       "intensity": 0.18
     }
   ],
@@ -356,6 +356,14 @@
     },
     {
       "id": 4,
+      "name": "Three Former Google Engineers Indicted Over Trade ...",
+      "source": "The Hacker News",
+      "severity": "High",
+      "time": "2026-02-20",
+      "description": "Two former Google engineers and one of their husbands have been indicted in the U.S. for allegedly c..."
+    },
+    {
+      "id": 5,
       "name": "PromptSpy Android Malware Abuses Gemini AI to Auto...",
       "source": "The Hacker News",
       "severity": "High",
@@ -363,38 +371,30 @@
       "description": "Cybersecurity researchers have discovered what they say is the first Android malware that abuses Gem..."
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "INTERPOL Operation Red Card 2.0 Arrests 651 in Afr...",
       "source": "The Hacker News",
       "severity": "High",
       "time": "2026-02-19",
       "description": "An international cybercrime operation against online scams has led to 651 arrests and recovered more..."
-    },
-    {
-      "id": 6,
-      "name": "Microsoft Patches CVE-2026-26119 Privilege Escalat...",
-      "source": "The Hacker News",
-      "severity": "High",
-      "time": "2026-02-19",
-      "description": "Microsoft has disclosed a now-patched security flaw in Windows Admin Center that could allow an atta..."
     }
   ],
   "statsData": {
     "totalThreats": {
       "value": 1599,
-      "change": -6,
+      "change": 14,
       "trend": "down"
     },
     "criticalAlerts": {
       "value": 1524,
       "change": 3,
-      "trend": "down"
-    },
-    "systemsMonitored": {
-      "value": 1229,
-      "change": 2,
       "trend": "up"
     },
-    "riskScore": 70
+    "systemsMonitored": {
+      "value": 1500,
+      "change": 1,
+      "trend": "up"
+    },
+    "riskScore": 69
   }
 }
