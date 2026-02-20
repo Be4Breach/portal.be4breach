@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Settings, Github, CheckCircle2, AlertTriangle, Loader2,
-  User, Mail, Building2, Shield,
+  User, Mail, Shield,
 } from "lucide-react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
