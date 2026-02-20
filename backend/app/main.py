@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router
 from app.routes.admin import router as admin_router
 from app.routes.cyber import router as cyber_router
+from app.routes.github import router as github_router
+from app.routes.scan import router as scan_router
 import os
 from dotenv import load_dotenv
 
@@ -25,6 +27,8 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(cyber_router, tags=["Cyber Dashboard"])
+app.include_router(github_router, prefix="/api/github", tags=["GitHub"])
+app.include_router(scan_router, prefix="/api", tags=["Security Scanning"])
 
 @app.get("/")
 async def root():

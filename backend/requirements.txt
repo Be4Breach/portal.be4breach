@@ -1,6 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 motor
+pymongo
 pydantic[email]
 python-multipart
 python-jose[cryptography]
@@ -10,3 +11,5 @@ feedparser
 requests
 python-dateutil
 jinja2
+httpx
+semgrep

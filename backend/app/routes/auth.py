@@ -59,12 +59,19 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={
-            "sub": user["email"], 
+            "sub": user["email"],
             "role": user.get("role", "user"),
+            "auth_provider": "email",
             "first_name": user.get("first_name", ""),
-            "last_name": user.get("last_name", "")
-        }, 
-        expires_delta=access_token_expires
+            "last_name": user.get("last_name", ""),
+            # Include GitHub fields if user has connected their account
+            "github_login": user.get("github_login"),
+            "github_name": user.get("github_name"),
+            "github_avatar": user.get("github_avatar"),
+            "github_token": user.get("github_token"),
+        },
+        expires_delta=access_token_expires,
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
+

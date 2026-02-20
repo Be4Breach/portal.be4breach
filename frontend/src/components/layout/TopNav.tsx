@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Search, Settings, X } from "lucide-react";
+import { Bell, Search, Settings, X, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 import navLogo from "@/assets/logo.jpeg";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Popover,
   PopoverContent,
@@ -27,59 +28,28 @@ const severityStyles: Record<string, string> = {
   Low: "bg-threat-low text-white",
 };
 
-const TopNav = () => {
+const TopNav = ({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const { data } = useDashboardData();
-  const [userInfo, setUserInfo] = useState<{
-    email: string;
-    role: string;
-    firstName?: string;
-    lastName?: string;
-  } | null>(null);
-
-  // Decode JWT token to get user info
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserInfo({
-          email: payload.sub || payload.email || "",
-          role: payload.role || "user",
-          firstName: payload.first_name,
-          lastName: payload.last_name,
-        });
-      } catch (e) {
-        console.error("Failed to decode token", e);
-      }
-    }
-  }, []);
+  const { user, logout } = useAuth();
 
   const notifications = (data?.recentAlerts ?? []).slice(0, 3);
 
   // Generate initials from name or email
   const getInitials = () => {
-    if (userInfo?.firstName && userInfo?.lastName) {
-      return `${userInfo.firstName[0]}${userInfo.lastName[0]}`.toUpperCase();
+    if (user?.github_name) {
+      const parts = user.github_name.split(" ");
+      return parts.length > 1
+        ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+        : user.github_name.substring(0, 2).toUpperCase();
     }
-    if (userInfo?.email) {
-      return userInfo.email.substring(0, 2).toUpperCase();
-    }
+    if (user?.email) return user.email.substring(0, 2).toUpperCase();
     return "U";
   };
 
-  // Get display name
-  const getDisplayName = () => {
-    if (userInfo?.firstName && userInfo?.lastName) {
-      return `${userInfo.firstName} ${userInfo.lastName}`;
-    }
-    if (userInfo?.email) {
-      return userInfo.email.split('@')[0];
-    }
-    return "User";
-  };
+  const getDisplayName = () => user?.github_name || user?.github_login || user?.email?.split("@")[0] || "User";
 
   const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && search.trim()) {
@@ -88,16 +58,25 @@ const TopNav = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    logout();
     navigate("/login");
   };
 
   return (
-    <header className="sticky top-0 z-50 h-14 border-b bg-card flex items-center justify-between px-6 shrink-0">
-      <button onClick={() => navigate("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+    <header className="sticky top-0 z-50 h-14 border-b bg-card flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
+      {/* Hamburger — mobile only */}
+      <button
+        id="mobile-menu-btn"
+        onClick={onMobileMenuClick}
+        className="lg:hidden flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+        aria-label="Open navigation menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      <button onClick={() => navigate("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
         <span className="text-xl font-bold tracking-tight">
-          <img src={navLogo} alt="Logo" className="w-[150px]" />
+          <img src={navLogo} alt="Logo" className="w-[120px] md:w-[150px]" />
         </span>
       </button>
 
@@ -173,14 +152,18 @@ const TopNav = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity">
-              {getInitials()}
+            <button className="h-8 w-8 rounded-full overflow-hidden bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium hover:opacity-80 transition-opacity border border-border">
+              {user?.github_avatar ? (
+                <img src={user.github_avatar} alt={getDisplayName()} className="h-full w-full object-cover" />
+              ) : (
+                getInitials()
+              )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">{getDisplayName()}</p>
-              <p className="text-xs text-muted-foreground">{userInfo?.email || "user@be4breach.com"}</p>
+              <p className="text-xs text-muted-foreground">{user?.email || "user@be4breach.com"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/settings")}>Profile Settings</DropdownMenuItem>

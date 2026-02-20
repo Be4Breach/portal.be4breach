@@ -43,16 +43,39 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        sub: str = payload.get("sub")
+        if sub is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-        
-    user = await user_collection.find_one({"email": email})
+
+    # GitHub OAuth-only users — return JWT payload directly
+    if payload.get("auth_provider") == "github":
+        return {
+            "email": sub,
+            "github_login": payload.get("github_login"),
+            "github_name": payload.get("github_name"),
+            "github_avatar": payload.get("github_avatar"),
+            "github_token": payload.get("github_token"),
+            "auth_provider": "github",
+            "role": payload.get("role", "user"),
+        }
+
+    # Email/password users — look up in MongoDB, then merge in JWT github fields
+    # (JWT github fields come from the connect flow and are fresher than DB for the token)
+    user = await user_collection.find_one({"email": sub})
     if user is None:
         raise credentials_exception
+
+    # Overlay github fields from the JWT (they may be newer than DB if recently connected)
+    if payload.get("github_token"):
+        user["github_token"] = payload.get("github_token")
+        user["github_login"] = payload.get("github_login") or user.get("github_login")
+        user["github_name"] = payload.get("github_name") or user.get("github_name")
+        user["github_avatar"] = payload.get("github_avatar") or user.get("github_avatar")
+
     return user
+
 
 async def get_current_admin(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
