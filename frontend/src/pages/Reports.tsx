@@ -3,55 +3,54 @@ import { ReportDashboard } from "@/components/reports/ReportDashboard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import BACKEND_URL from "@/lib/api";
 import type { PentestReport } from "@/types/pentest-report";
+import { parseDocxFile } from "@/lib/docx-parser";
 import { Loader2, UploadCloud, FileText, RefreshCw } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+
+const MAX_SIZE_MB = 50; // effectively no limit since parsing is client-side
 
 const Reports = () => {
-  const { token } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [report, setReport] = useState<PentestReport | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
-  const handleUpload = async (file: File) => {
-    setUploading(true);
+  const handleFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith(".docx")) {
+      setError("Only .docx files are supported.");
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setError(`File is too large (max ${MAX_SIZE_MB} MB).`);
+      return;
+    }
+
+    setParsing(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const response = await fetch(`${BACKEND_URL}/api/reports/pentest-report`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      const payload = await response.json();
-      if (!response.ok || !payload?.success) {
-        const message = payload?.detail || payload?.message || "Failed to parse the report";
-        throw new Error(message);
+      const result = await parseDocxFile(file);
+      if (!result.findings.length) {
+        setError(
+          "Parsed report but found 0 findings. Ensure the DOCX uses the standard summary and detail table format."
+        );
+        return;
       }
-
-      setReport(payload.report as PentestReport);
+      setReport(result);
       setFileName(file.name);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to upload file";
-      setError(message);
+      const msg = err instanceof Error ? err.message : "Failed to parse the file";
+      setError(msg);
     } finally {
-      setUploading(false);
+      setParsing(false);
     }
   };
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleUpload(file);
+      handleFile(file);
       e.target.value = "";
     }
   };
@@ -61,7 +60,10 @@ const Reports = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">Pentest Report Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Upload a pentest report (.docx) to generate a live dashboard with the same layout as the main console.</p>
+          <p className="text-sm text-muted-foreground">
+            Upload a pentest report (.docx) to generate a live dashboard.
+            Files are parsed entirely in-browser — nothing is uploaded to the server.
+          </p>
         </div>
         {fileName && (
           <Badge variant="secondary" className="text-[11px]">
@@ -76,18 +78,22 @@ const Reports = () => {
         onDrop={(e) => {
           e.preventDefault();
           const file = e.dataTransfer.files?.[0];
-          if (file) handleUpload(file);
+          if (file) handleFile(file);
         }}
       >
-        <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 rounded-lg bg-secondary flex items-center justify-center">
               <UploadCloud className="h-6 w-6 text-destructive" />
             </div>
             <div>
               <p className="text-sm font-semibold">Upload pentest report</p>
-              <p className="text-xs text-muted-foreground">Drop a .docx file or browse to generate a dashboard that mirrors the main view.</p>
-              {error && <p className="text-xs text-destructive mt-2">Error: {error}</p>}
+              <p className="text-xs text-muted-foreground">
+                Drop a .docx file here or browse. Parsed locally — no size limits, no uploads.
+              </p>
+              {error && (
+                <p className="text-xs text-destructive mt-2">⚠ {error}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -101,12 +107,12 @@ const Reports = () => {
             <Button
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={parsing}
             >
-              {uploading ? (
+              {parsing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Parsing...
+                  Parsing…
                 </>
               ) : (
                 <>
@@ -119,27 +125,29 @@ const Reports = () => {
               <Button
                 variant="secondary"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
+                disabled={parsing}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Replace file
+                Replace
               </Button>
             )}
           </div>
         </div>
       </Card>
 
-      {uploading && (
+      {parsing && (
         <Card className="p-4 flex items-center gap-3 border border-destructive/30 bg-secondary">
           <Loader2 className="h-5 w-5 animate-spin text-destructive" />
-          <p className="text-sm font-medium">Parsing report and building dashboard...</p>
+          <p className="text-sm font-medium">Parsing report in browser…</p>
         </Card>
       )}
 
-      {!report && !uploading && (
+      {!report && !parsing && (
         <Card className="p-6 text-center text-muted-foreground space-y-2">
           <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
-          <p className="text-sm">Upload a DOCX pentest report to see findings rendered with the same widgets as your live dashboard.</p>
+          <p className="text-sm">
+            Upload a DOCX pentest report to see findings rendered as an interactive dashboard.
+          </p>
         </Card>
       )}
 
