@@ -4,6 +4,7 @@ import {
     Mail, KeyRound, Eye, EyeOff, User, Building2,
     AlertCircle, CheckCircle2, Loader2,
 } from "lucide-react";
+import BACKEND_URL from "@/lib/api";
 
 // Google "G" SVG logo
 function GoogleIcon({ className }: { className?: string }) {
@@ -17,7 +18,7 @@ function GoogleIcon({ className }: { className?: string }) {
     );
 }
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
+
 
 export default function SignupPage() {
     const navigate = useNavigate();

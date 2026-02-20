@@ -23,7 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
+import BACKEND_URL from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

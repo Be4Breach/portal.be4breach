@@ -40,7 +40,9 @@ export interface DashboardData {
   };
 }
 
-const API_BASE_URL = "http://localhost:8000/api";
+import BACKEND_URL from "@/lib/api";
+
+const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Simple in-memory cache so multiple components share one network call.
 let cachedData: DashboardData | null = null;

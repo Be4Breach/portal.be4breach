@@ -6,7 +6,7 @@ import {
   User, Mail, Shield,
 } from "lucide-react";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
+import BACKEND_URL from "@/lib/api";
 
 export default function SettingsPage() {
   const { user, token, hasGitHub } = useAuth();

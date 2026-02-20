@@ -6,7 +6,7 @@ import {
     KeyRound, Loader2, EyeOff,
 } from "lucide-react";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
+import BACKEND_URL from "@/lib/api";
 
 // Google "G" SVG logo
 function GoogleIcon({ className }: { className?: string }) {
