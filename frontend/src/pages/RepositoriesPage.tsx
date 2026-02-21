@@ -381,8 +381,9 @@ export default function RepositoriesPage() {
                     )}
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
-                            <Github className="h-5 w-5" />
-                            {user?.github_name ?? user?.github_login ?? "Your"} Repositories
+                            {user?.github_login
+                                ? `${user.github_login}${user.github_login.endsWith("s") ? "'" : "'s"} Repositories`
+                                : "Your Repositories"}
                         </h1>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             {isLoading

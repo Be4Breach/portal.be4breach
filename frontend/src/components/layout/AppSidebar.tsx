@@ -1,16 +1,17 @@
-import { LayoutDashboard, Shield, BarChart3, AlertTriangle, FileText, Settings, Github, X, UserCog, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Shield, FileText, Settings, Github, X, UserCog, ShieldCheck, ShieldAlert } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { title: "Identity Risk Intelligence", icon: ShieldAlert, path: "/identity-risk-intelligence" },
   { title: "Compliance", icon: ShieldCheck, path: "/compliance" },
   { title: "Repositories", icon: Github, path: "/repositories" },
   { title: "Reports", icon: FileText, path: "/reports" },
   { title: "Threats", icon: Shield, path: "/threats" },
-  { title: "Analytics", icon: BarChart3, path: "/analytics" },
-  { title: "Alerts", icon: AlertTriangle, path: "/alerts" },
+  // { title: "Analytics", icon: BarChart3, path: "/analytics" },
+  // { title: "Alerts", icon: AlertTriangle, path: "/alerts" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 

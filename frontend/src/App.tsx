@@ -15,6 +15,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import RepositoriesPage from "@/pages/RepositoriesPage";
 import ScanPage from "@/pages/ScanPage";
 import AdminDashboard from "@/pages/AdminDashboard";
+import IdentityRiskPage from "@/pages/IdentityRiskPage";
 import NotFound from "@/pages/NotFound";
 import Compliance from "@/pages/Compliance";
 
@@ -61,6 +62,7 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
             <Route path="compliance" element={<Compliance />} />
+            <Route path="identity-risk-intelligence" element={<IdentityRiskPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="scan/:owner/:repo" element={<ScanPage />} />
             <Route path="*" element={<NotFound />} />

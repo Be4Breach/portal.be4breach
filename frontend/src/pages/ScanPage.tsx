@@ -379,6 +379,36 @@ function DownloadButton({ scan, findings }: { scan: Scan; findings: Finding[] })
     );
 }
 
+function SemgrepErrorsPanel({ errors }: { errors: string[] }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="border rounded-lg overflow-hidden">
+            <button
+                className="w-full cursor-pointer px-4 py-3 text-xs font-medium text-muted-foreground hover:bg-secondary/50 transition-colors select-none flex items-center gap-2"
+                onClick={() => setOpen((o) => !o)}
+            >
+                <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+                {errors.length} Semgrep parse warning(s)
+                <span className="text-[10px] opacity-60 ml-auto">
+                    {open ? "Click to collapse" : "Click to expand"}
+                </span>
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+            </button>
+            {open && (
+                <div className="border-t bg-secondary/20 p-4 space-y-3">
+                    <p className="text-[11px] text-muted-foreground">
+                        These are non-fatal warnings where Semgrep couldn't fully parse certain files
+                        (e.g. unescaped <code>&amp;</code> in HTML). Findings from other files are unaffected.
+                    </p>
+                    {errors.map((e, i) => (
+                        <ParseError key={i} raw={e} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ScanPage() {
@@ -395,6 +425,8 @@ export default function ScanPage() {
     const [error, setError] = useState<string | null>(null);
     const [filterSev, setFilterSev] = useState<string>("all");
     const [filterSearch, setFilterSearch] = useState("");
+    const [findingsPage, setFindingsPage] = useState(1);
+    const FINDINGS_PER_PAGE = 10;
 
     const fetchLatest = useCallback(async () => {
         if (!token) return;
@@ -482,6 +514,12 @@ export default function ScanPage() {
         }
         return true;
     });
+
+    const totalFindingPages = Math.ceil(filtered.length / FINDINGS_PER_PAGE);
+    const pagedFindings = filtered.slice(
+        (findingsPage - 1) * FINDINGS_PER_PAGE,
+        findingsPage * FINDINGS_PER_PAGE
+    );
 
     const isActive = scan && ["queued", "running"].includes(scan.status);
     const summary = scan?.severity_summary ?? { CRITICAL: 0, ERROR: 0, WARNING: 0, INFO: 0 };
@@ -672,12 +710,12 @@ export default function ScanPage() {
                                 <input
                                     placeholder="Search findings…"
                                     value={filterSearch}
-                                    onChange={(e) => setFilterSearch(e.target.value)}
+                                    onChange={(e) => { setFilterSearch(e.target.value); setFindingsPage(1); }}
                                     className="flex-1 min-w-48 h-9 px-3 rounded-md border bg-secondary text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
                                 <select
                                     value={filterSev}
-                                    onChange={(e) => setFilterSev(e.target.value)}
+                                    onChange={(e) => { setFilterSev(e.target.value); setFindingsPage(1); }}
                                     className="h-9 px-3 pr-8 rounded-md border bg-secondary text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
                                 >
                                     <option value="all">All severities</option>
@@ -689,7 +727,7 @@ export default function ScanPage() {
                             </div>
 
                             <p className="text-xs text-muted-foreground">
-                                Showing {filtered.length} of {findings.length} findings
+                                Showing {filtered.length === 0 ? 0 : (findingsPage - 1) * FINDINGS_PER_PAGE + 1}–{Math.min(findingsPage * FINDINGS_PER_PAGE, filtered.length)} of {filtered.length} findings
                             </p>
 
                             {filtered.length === 0 ? (
@@ -699,9 +737,73 @@ export default function ScanPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    {filtered.map((f, i) => (
+                                    {pagedFindings.map((f, i) => (
                                         <FindingCard key={`${f.rule_id}-${f.file_path}-${i}`} finding={f} />
                                     ))}
+
+                                    {/* ── Pagination ── */}
+                                    {totalFindingPages > 1 && (
+                                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Page {findingsPage} of {totalFindingPages}
+                                            </p>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => setFindingsPage(1)}
+                                                    disabled={findingsPage === 1}
+                                                    className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    «
+                                                </button>
+                                                <button
+                                                    onClick={() => setFindingsPage((p) => Math.max(1, p - 1))}
+                                                    disabled={findingsPage === 1}
+                                                    className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    ‹ Prev
+                                                </button>
+                                                {Array.from({ length: totalFindingPages }, (_, i) => i + 1)
+                                                    .filter((p) => p === 1 || p === totalFindingPages || Math.abs(p - findingsPage) <= 1)
+                                                    .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                                                        if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("...");
+                                                        acc.push(p);
+                                                        return acc;
+                                                    }, [])
+                                                    .map((p, idx) =>
+                                                        p === "..." ? (
+                                                            <span key={`ellipsis-${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
+                                                        ) : (
+                                                            <button
+                                                                key={p}
+                                                                onClick={() => setFindingsPage(p as number)}
+                                                                className={cn(
+                                                                    "min-w-[28px] px-2 py-1 text-xs rounded-md border transition-colors",
+                                                                    findingsPage === p
+                                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                                        : "bg-secondary hover:bg-secondary/80"
+                                                                )}
+                                                            >
+                                                                {p}
+                                                            </button>
+                                                        )
+                                                    )}
+                                                <button
+                                                    onClick={() => setFindingsPage((p) => Math.min(totalFindingPages, p + 1))}
+                                                    disabled={findingsPage === totalFindingPages}
+                                                    className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    Next ›
+                                                </button>
+                                                <button
+                                                    onClick={() => setFindingsPage(totalFindingPages)}
+                                                    disabled={findingsPage === totalFindingPages}
+                                                    className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    »
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -709,22 +811,7 @@ export default function ScanPage() {
 
                     {/* ── Semgrep parse errors ─────────────────────────────────── */}
                     {scan.semgrep_errors.length > 0 && (
-                        <details className="border rounded-lg overflow-hidden">
-                            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-muted-foreground hover:bg-secondary/50 transition-colors select-none flex items-center gap-2">
-                                <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
-                                {scan.semgrep_errors.length} Semgrep parse warning(s)
-                                <span className="text-[10px] opacity-60 ml-auto">Click to expand</span>
-                            </summary>
-                            <div className="border-t bg-secondary/20 p-4 space-y-3">
-                                <p className="text-[11px] text-muted-foreground">
-                                    These are non-fatal warnings where Semgrep couldn't fully parse certain files
-                                    (e.g. unescaped <code>&amp;</code> in HTML). Findings from other files are unaffected.
-                                </p>
-                                {scan.semgrep_errors.map((e, i) => (
-                                    <ParseError key={i} raw={e} />
-                                ))}
-                            </div>
-                        </details>
+                        <SemgrepErrorsPanel errors={scan.semgrep_errors} />
                     )}
                 </>
             )}
