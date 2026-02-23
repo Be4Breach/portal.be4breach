@@ -19,7 +19,19 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Resolve semgrep binary: removed due to Vercel free tier limitations
+# Resolve semgrep binary: prefer venv Scripts/, then PATH
+def _semgrep_bin() -> str:
+    venv_bin = Path(sys.executable).parent / "semgrep"
+    if sys.platform == "win32":
+        venv_bin = venv_bin.with_suffix(".exe")
+    if venv_bin.exists():
+        return str(venv_bin)
+    found = shutil.which("semgrep")
+    if found:
+        return found
+    raise FileNotFoundError(
+        "semgrep not found. Install it with: pip install semgrep"
+    )
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,9 +55,11 @@ async def run_scan(
     github_login: str,
 ):
     """
-    Mocked scan that returns a system notice.
-    Semgrep is disabled due to deployment environment limitations (Vercel Free Tier).
+    Clones the repo, runs Semgrep, parses JSON output, stores results in MongoDB.
+    Runs as a FastAPI BackgroundTask so the HTTP response returns immediately.
     """
+    tmpdir: Optional[str] = None
+
     try:
         # ── Mark scan as running ──────────────────────────────────────────────
         await scans_collection.update_one(
@@ -53,29 +67,110 @@ async def run_scan(
             {"$set": {"status": "running", "started_at": datetime.now(timezone.utc)}},
         )
 
+        # ── Clone repo into a temp directory ─────────────────────────────────
+        tmpdir = tempfile.mkdtemp(prefix="be4breach_scan_")
+        auth_url = clone_url.replace("https://", f"https://{github_token}@")
+
+        # Use blobless clone (--filter=blob:none) — git fetches only tree/commit
+        # objects during clone; file blobs are fetched lazily on access.
+        # Combined with --depth 1 and --single-branch this is very fast even
+        # on slow connections. Timeout raised to 300s for large repos.
+        clone_result = subprocess.run(
+            [
+                "git", "clone",
+                "--depth", "1",
+                "--single-branch",      # only default branch, skip all other refs
+                "--no-tags",            # skip fetching tag objects
+                "--filter=blob:none",   # blobless: don't download file content during clone
+                auth_url,
+                tmpdir,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=300,              # raised from 120s → 300s
+        )
+
+        if clone_result.returncode != 0:
+            raise RuntimeError(f"git clone failed: {clone_result.stderr[:500]}")
+
+
+        # ── Run Semgrep ───────────────────────────────────────────────────────
+        # Force UTF-8 on Windows — semgrep outputs Unicode that cp1252 can't encode
+        semgrep_env = os.environ.copy()
+        semgrep_env["PYTHONIOENCODING"] = "utf-8"
+        semgrep_env["PYTHONUTF8"] = "1"
+
+        semgrep_result = subprocess.run(
+            [
+                _semgrep_bin(),
+                # p/default = curated free ruleset, no Semgrep account needed.
+                # 'auto' is avoided because Pro rules return 'requires login'
+                # as the code snippet when not authenticated.
+                "--config", "p/default",
+                "--json",
+                "--no-git-ignore",
+                "--timeout", "60",
+                tmpdir,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=semgrep_env,
+            timeout=300,
+        )
+
+
+
+        # Semgrep exits 1 when findings exist — that's fine
+        if semgrep_result.returncode not in (0, 1):
+            raise RuntimeError(
+                f"Semgrep failed (exit {semgrep_result.returncode}): "
+                f"{semgrep_result.stderr[:500]}"
+            )
+
+        # ── Parse findings ────────────────────────────────────────────────────
+        try:
+            output = json.loads(semgrep_result.stdout)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Could not parse Semgrep JSON output: {e}")
+
+        raw_findings = output.get("results", [])
+        errors = output.get("errors", [])
+
         # Build finding documents
-        finding_docs = [{
-            "scan_id": scan_id,
-            "repo_full_name": repo_full_name,
-            "github_login": github_login,
-            "rule_id": "system_notice",
-            "severity": "INFO",
-            "message": "Security scanning via Semgrep has been disabled on this instance (Vercel Free Tier limit).",
-            "file_path": "system",
-            "line_start": None,
-            "line_end": None,
-            "code_snippet": "",
-            "cwe": [],
-            "owasp": [],
-            "fix": None,
-            "created_at": datetime.now(timezone.utc),
-        }]
+        finding_docs = []
+        for f in raw_findings:
+            meta = f.get("extra", {})
+            finding_docs.append({
+                "scan_id": scan_id,
+                "repo_full_name": repo_full_name,
+                "github_login": github_login,
+                "rule_id": f.get("check_id", "unknown"),
+                "severity": meta.get("severity", "INFO").upper(),
+                "message": meta.get("message", ""),
+                "file_path": f.get("path", "").replace(tmpdir, "").replace(tmpdir.replace("\\", "/"), "").lstrip("/\\"),
+                "line_start": f.get("start", {}).get("line"),
+                "line_end": f.get("end", {}).get("line"),
+                # Semgrep Pro returns "requires login" when unauthenticated — replace with empty
+                "code_snippet": "" if meta.get("lines", "").strip().lower() in ("requires login", "requireslogin") else meta.get("lines", ""),
+                "cwe": meta.get("metadata", {}).get("cwe", []),
+                "owasp": meta.get("metadata", {}).get("owasp", []),
+                "fix": meta.get("fix"),
+                "created_at": datetime.now(timezone.utc),
+            })
 
         # Insert findings
-        await findings_collection.insert_many(finding_docs)
+        if finding_docs:
+            await findings_collection.insert_many(finding_docs)
 
         # Severity summary
-        summary = {"CRITICAL": 0, "ERROR": 0, "WARNING": 0, "INFO": 1}
+        summary = {"CRITICAL": 0, "ERROR": 0, "WARNING": 0, "INFO": 0}
+        for fd in finding_docs:
+            sev = fd["severity"]
+            summary[sev] = summary.get(sev, 0) + 1
 
         # ── Mark scan complete ────────────────────────────────────────────────
         await scans_collection.update_one(
@@ -86,12 +181,16 @@ async def run_scan(
                     "completed_at": datetime.now(timezone.utc),
                     "finding_count": len(finding_docs),
                     "severity_summary": summary,
-                    "semgrep_errors": [],
+                    # Serialize errors: dicts → formatted strings, strings → as-is
+                    "semgrep_errors": [
+                        json.dumps(e, indent=2) if isinstance(e, dict) else str(e)
+                        for e in errors[:10]
+                    ],
                 }
             },
         )
         logger.info(
-            "Scan %s completed (mocked): %d findings for %s", scan_id, len(finding_docs), repo_full_name
+            "Scan %s completed: %d findings for %s", scan_id, len(finding_docs), repo_full_name
         )
 
     except Exception as exc:
@@ -106,6 +205,10 @@ async def run_scan(
                 }
             },
         )
+    finally:
+        # ── Clean up temp directory ───────────────────────────────────────────
+        if tmpdir and os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────

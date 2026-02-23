@@ -14,7 +14,7 @@ load_dotenv()
 # Secret key for JWT encoding/decoding
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key_change_in_production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 720  # 12 hours
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -61,18 +61,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             "role": payload.get("role", "user"),
         }
 
-    # Email/password users — look up in MongoDB, then merge in JWT github fields
-    # (JWT github fields come from the connect flow and are fresher than DB for the token)
+    # Email/password users — look up in MongoDB.
+    # ALWAYS use the DB's github_token — it is updated on every GitHub connect/reconnect.
+    # Never override with the JWT's github_token, which may be stale (baked in at login time).
     user = await user_collection.find_one({"email": sub})
     if user is None:
         raise credentials_exception
-
-    # Overlay github fields from the JWT (they may be newer than DB if recently connected)
-    if payload.get("github_token"):
-        user["github_token"] = payload.get("github_token")
-        user["github_login"] = payload.get("github_login") or user.get("github_login")
-        user["github_name"] = payload.get("github_name") or user.get("github_name")
-        user["github_avatar"] = payload.get("github_avatar") or user.get("github_avatar")
 
     return user
 

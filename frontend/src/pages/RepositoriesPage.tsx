@@ -468,26 +468,45 @@ export default function RepositoriesPage() {
             )}
 
             {/* Error state */}
-            {isError && (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center">
-                        <AlertCircle className="h-7 w-7 text-destructive" />
+            {isError && (() => {
+                const msg = (error as Error)?.message ?? "";
+                const isTokenExpired = msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("401");
+                return (
+                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                        <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                            <AlertCircle className="h-7 w-7 text-destructive" />
+                        </div>
+                        <div className="text-center space-y-1">
+                            <p className="font-semibold">
+                                {isTokenExpired ? "GitHub token expired or revoked" : "Failed to load repositories"}
+                            </p>
+                            <p className="text-sm text-muted-foreground max-w-sm">
+                                {isTokenExpired
+                                    ? "Your GitHub access token is no longer valid. Please reconnect your GitHub account in Settings."
+                                    : msg || "An unexpected error occurred."}
+                            </p>
+                        </div>
+                        {isTokenExpired ? (
+                            <Link
+                                to="/settings"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                            >
+                                <Settings className="h-4 w-4" />
+                                Reconnect GitHub in Settings
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={() => refetch()}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                                Try again
+                            </button>
+                        )}
                     </div>
-                    <div className="text-center space-y-1">
-                        <p className="font-semibold">Failed to load repositories</p>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            {(error as Error)?.message ?? "An unexpected error occurred."}
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => refetch()}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-                    >
-                        <RefreshCw className="h-4 w-4" />
-                        Try again
-                    </button>
-                </div>
-            )}
+                );
+            })()}
 
             {/* Empty state */}
             {!isLoading && !isError && filtered.length === 0 && repos && (
