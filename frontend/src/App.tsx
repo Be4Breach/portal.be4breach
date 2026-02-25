@@ -15,9 +15,9 @@ import SettingsPage from "@/pages/SettingsPage";
 import ScanPage from "@/pages/ScanPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import IdentityRiskPage from "@/pages/IdentityRiskPage";
-import NotFound from "@/pages/NotFound";
 import Compliance from "@/pages/Compliance";
 import DevSecOpsDashboard from "@/pages/DevSecOpsDashboard";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {

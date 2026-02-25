@@ -7,6 +7,7 @@ from app.routes.github import router as github_router
 from app.routes.scan import router as scan_router
 from app.routes.compliance import router as compliance_router
 from app.routes.reports import router as reports_router
+from app.routes.ai import router as ai_router
 import os
 from dotenv import load_dotenv
 
@@ -33,6 +34,7 @@ app.include_router(github_router, prefix="/api/github", tags=["GitHub"])
 app.include_router(scan_router, prefix="/api", tags=["Security Scanning"])
 app.include_router(compliance_router, prefix="/api/compliance", tags=["Compliance"])
 app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
+app.include_router(ai_router, prefix="/api/ai", tags=["AI Copilot"])
 
 @app.get("/")
 async def root():

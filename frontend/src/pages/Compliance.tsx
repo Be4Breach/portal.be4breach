@@ -587,7 +587,7 @@ const Compliance = () => {
                     borderRadius: "0.5rem",
                     fontSize: 12,
                   }}
-                  formatter={(value: number) => [`${value}%`, "Score"]}
+                  formatter={(value: any) => [`${value}%`, "Score"]}
                 />
                 <Line
                   type="monotone"

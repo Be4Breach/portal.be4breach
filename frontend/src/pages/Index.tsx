@@ -5,8 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import DashboardCopilot from "@/components/DashboardCopilot";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { isoQuestions } from "@/data/isoQuestions";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Answer = "yes" | "no" | "skip" | null;
 type AnswerRecord = { answer: Answer; evidenceName?: string };
@@ -51,9 +53,24 @@ const computeComplianceProgress = (answers: Record<string, AnswerRecord>) => {
 const Index = () => {
   const navigate = useNavigate();
   const { data, loading } = useDashboardData();
+  const { user } = useAuth();
   const [complianceProgress, setComplianceProgress] = useState(() =>
     computeComplianceProgress({}),
   );
+
+  const getFirstName = () => {
+    if (user?.first_name) return user.first_name;
+    if (user?.github_name) return user.github_name.split(" ")[0];
+    if (user?.email) return user.email.split("@")[0];
+    return "User";
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   useEffect(() => {
     try {
@@ -71,7 +88,13 @@ const Index = () => {
   const ringAngle = Math.min(360, Math.max(0, riskScore * 3.6));
 
   return (
-    <div className="space-y-4 w-full max-w-6xl">
+    <div className="space-y-6 w-full max-w-6xl">
+      <h1 className="text-3xl md:text-4xl font-semibold text-zinc-800 tracking-tight pt-2 pb-1">
+        {getGreeting()}, {getFirstName()}
+      </h1>
+
+      <DashboardCopilot />
+
       <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-6 shadow-lg">
         <div className="absolute inset-0 opacity-30 mix-blend-screen bg-[radial-gradient(circle_at_20%_20%,#ef4444_0,transparent_35%),radial-gradient(circle_at_80%_10%,#f97316_0,transparent_30%),radial-gradient(circle_at_80%_80%,#22d3ee_0,transparent_35%)]" />
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
