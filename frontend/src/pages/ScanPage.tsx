@@ -530,7 +530,7 @@ export default function ScanPage() {
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="space-y-1">
                     <button
-                        onClick={() => navigate("/repositories")}
+                        onClick={() => navigate("/devsecops/repositories")}
                         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
