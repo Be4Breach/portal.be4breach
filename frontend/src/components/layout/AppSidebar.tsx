@@ -1,19 +1,104 @@
-import { LayoutDashboard, Shield, FileText, Settings, Github, X, UserCog, ShieldCheck, ShieldAlert } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Shield,
+  FileText,
+  Settings,
+  X,
+  UserCog,
+  ShieldCheck,
+  ShieldAlert,
+  ChevronDown,
+  Package,
+  Code2,
+  Globe,
+  Layers,
+  Github,
+  Radar,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
-const navItems = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { title: "Identity Risk Intelligence", icon: ShieldAlert, path: "/identity-risk-intelligence" },
-  { title: "Compliance", icon: ShieldCheck, path: "/compliance" },
-  { title: "Repositories", icon: Github, path: "/repositories" },
-  { title: "Reports", icon: FileText, path: "/reports" },
-  { title: "Threats", icon: Shield, path: "/threats" },
-  // { title: "Analytics", icon: BarChart3, path: "/analytics" },
-  // { title: "Alerts", icon: AlertTriangle, path: "/alerts" },
-  { title: "Settings", icon: Settings, path: "/settings" },
+// ─── DevSecOps sub-items ──────────────────────────────────────────────────────
+
+const devSecOpsItems = [
+  { title: "Overview", icon: Shield, path: "/devsecops", exact: true },
+  { title: "Repositories", icon: Github, path: "/devsecops/repositories" },
+  { title: "SCA", icon: Package, path: "/devsecops/sca" },
+  { title: "SAST", icon: Code2, path: "/devsecops/sast" },
+  { title: "DAST", icon: Globe, path: "/devsecops/dast" },
+  { title: "SBOM", icon: Layers, path: "/devsecops/sbom" },
 ];
+
+// ─── Shared link style ────────────────────────────────────────────────────────
+
+const linkBase =
+  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors";
+const linkActive = "bg-secondary text-foreground border-l-2 border-destructive";
+const linkInactive = "text-muted-foreground hover:text-foreground hover:bg-secondary/50";
+
+// ─── DevSecOps accordion nav ──────────────────────────────────────────────────
+
+function DevSecOpsNav({ onNavigate }: { onNavigate?: () => void }) {
+  const location = useLocation();
+  const isInSection = location.pathname.startsWith("/devsecops");
+  const [open, setOpen] = useState(isInSection);
+
+  return (
+    <div>
+      {/* Accordion trigger */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          linkBase, "w-full justify-between",
+          isInSection ? linkActive : linkInactive
+        )}
+      >
+        <span className="flex items-center gap-3">
+          <Radar className="h-4 w-4 shrink-0" />
+          DevSecOps
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+
+      {/* Sub-items */}
+      {open && (
+        <div className="pl-4 mt-1 space-y-0.5 border-l border-border/50 ml-5">
+          {devSecOpsItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.exact
+              ? location.pathname === item.path
+              : location.pathname === item.path;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-xs font-medium transition-colors",
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{item.title}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Shared nav link list ─────────────────────────────────────────────────────
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
@@ -22,25 +107,84 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="flex-1 py-4 px-3 space-y-1">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          end={item.path === "/"}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-              isActive
-                ? "bg-secondary text-foreground border-l-2 border-destructive"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-            )
-          }
-        >
-          <item.icon className="h-4 w-4 shrink-0" />
-          <span>{item.title}</span>
-        </NavLink>
-      ))}
+      {/* Dashboard */}
+      <NavLink
+        to="/"
+        end
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <LayoutDashboard className="h-4 w-4 shrink-0" />
+        <span>Dashboard</span>
+      </NavLink>
+
+      {/* Identity Risk Intelligence */}
+      <NavLink
+        to="/identity-risk-intelligence"
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <ShieldAlert className="h-4 w-4 shrink-0" />
+        <span>Identity Risk Intel</span>
+      </NavLink>
+
+      {/* Compliance */}
+      <NavLink
+        to="/compliance"
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <ShieldCheck className="h-4 w-4 shrink-0" />
+        <span>Compliance</span>
+      </NavLink>
+
+      {/* ── DevSecOps accordion ── */}
+      <div className="pt-1 pb-1">
+
+        <DevSecOpsNav onNavigate={onNavigate} />
+      </div>
+
+      {/* Reports */}
+      <NavLink
+        to="/reports"
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <FileText className="h-4 w-4 shrink-0" />
+        <span>Reports</span>
+      </NavLink>
+
+      {/* Threats */}
+      <NavLink
+        to="/threats"
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <Shield className="h-4 w-4 shrink-0" />
+        <span>Threats</span>
+      </NavLink>
+
+      {/* Settings */}
+      <NavLink
+        to="/settings"
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(linkBase, isActive ? linkActive : linkInactive)
+        }
+      >
+        <Settings className="h-4 w-4 shrink-0" />
+        <span>Settings</span>
+      </NavLink>
 
       {/* Admin-only link */}
       {isAdmin && (
@@ -52,12 +196,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
             to="/admin"
             onClick={onNavigate}
             className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-secondary text-foreground border-l-2 border-destructive"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-              )
+              cn(linkBase, isActive ? linkActive : linkInactive)
             }
           >
             <UserCog className="h-4 w-4 shrink-0" />
@@ -121,10 +260,10 @@ export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-// ─── Desktop sidebar (unchanged) ─────────────────────────────────────────────
+// ─── Desktop sidebar ──────────────────────────────────────────────────────────
 const AppSidebar = () => {
   return (
-    <aside className="w-56 shrink-0 border-r bg-card hidden lg:flex flex-col">
+    <aside className="w-56 shrink-0 border-r bg-card hidden lg:flex flex-col overflow-y-auto">
       <NavItems />
       <SidebarFooter />
     </aside>

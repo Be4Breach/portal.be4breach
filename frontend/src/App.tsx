@@ -12,12 +12,12 @@ import Threats from "@/pages/Threats";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
-import RepositoriesPage from "@/pages/RepositoriesPage";
 import ScanPage from "@/pages/ScanPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import IdentityRiskPage from "@/pages/IdentityRiskPage";
 import NotFound from "@/pages/NotFound";
 import Compliance from "@/pages/Compliance";
+import DevSecOpsDashboard from "@/pages/DevSecOpsDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,7 +56,6 @@ function App() {
             }
           >
             <Route index element={<Index />} />
-            <Route path="repositories" element={<RepositoriesPage />} />
             <Route path="alerts" element={<Alerts />} />
             <Route path="threats" element={<Threats />} />
             <Route path="analytics" element={<Analytics />} />
@@ -65,6 +64,13 @@ function App() {
             <Route path="identity-risk-intelligence" element={<IdentityRiskPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="scan/:owner/:repo" element={<ScanPage />} />
+            {/* DevSecOps routes */}
+            <Route path="devsecops" element={<DevSecOpsDashboard defaultTab="overview" />} />
+            <Route path="devsecops/repositories" element={<DevSecOpsDashboard defaultTab="repositories" />} />
+            <Route path="devsecops/sca" element={<DevSecOpsDashboard defaultTab="sca" />} />
+            <Route path="devsecops/sast" element={<DevSecOpsDashboard defaultTab="sast" />} />
+            <Route path="devsecops/dast" element={<DevSecOpsDashboard defaultTab="dast" />} />
+            <Route path="devsecops/sbom" element={<DevSecOpsDashboard defaultTab="sbom" />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
