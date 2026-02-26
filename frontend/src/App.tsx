@@ -61,7 +61,7 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
             <Route path="compliance" element={<Compliance />} />
-            <Route path="identity-risk-intelligence" element={<IdentityRiskPage />} />
+            <Route path="identity-analyzer" element={<IdentityRiskPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="scan/:owner/:repo" element={<ScanPage />} />
             {/* DevSecOps routes */}

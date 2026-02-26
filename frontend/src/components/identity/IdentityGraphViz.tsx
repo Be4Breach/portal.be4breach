@@ -229,9 +229,9 @@ export default function IdentityGraphViz() {
                                                         <text y="34" textAnchor="middle" className="fill-foreground font-bold" fontSize="10">
                                                             {(n.email as string).split("@")[0]}
                                                         </text>
-                                                        <text y="46" textAnchor="middle" className="fill-muted-foreground font-semibold uppercase tracking-wider" fontSize="8">
+                                                        {/* <text y="46" textAnchor="middle" className="fill-muted-foreground font-semibold uppercase tracking-wider" fontSize="8">
                                                             {(n.source as string)} {isCritical ? " • CRITICAL" : ""}
-                                                        </text>
+                                                        </text> */}
                                                     </g>
                                                 )}
                                             </g>

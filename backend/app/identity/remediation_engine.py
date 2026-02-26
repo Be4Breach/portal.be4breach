@@ -117,7 +117,7 @@ class RemediationEngine:
                 "email": identity.email,
                 "provider": identity.source.value,
                 "priority_level": "critical" if is_admin else "high",
-                "details": f"Enable MFA on {identity.source.value.upper()} account for {identity.email}",
+                "details": f"Enable MFA for {identity.email}",
             })
 
         # 2. Excessive roles

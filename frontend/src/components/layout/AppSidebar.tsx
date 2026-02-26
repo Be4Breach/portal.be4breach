@@ -122,7 +122,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Identity Risk Intelligence */}
       <NavLink
-        to="/identity-risk-intelligence"
+        to="/identity-analyzer"
         onClick={onNavigate}
         className={({ isActive }) =>
           cn(linkBase, isActive ? linkActive : linkInactive)
