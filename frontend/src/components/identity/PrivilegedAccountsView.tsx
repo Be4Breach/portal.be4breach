@@ -1,95 +1,88 @@
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Terminal, Network } from "lucide-react";
+import { ShieldAlert, Globe, Zap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import IdentityTable from "./IdentityTable";
 import { useAuth } from "@/contexts/AuthContext";
-import { DEMO_MODE } from "@/api/demoConfig";
-import { MOCK_IDENTITIES } from "@/mocks/identityMockData";
+import { cn } from "@/lib/utils";
+import type { Identity } from "../../types/identity";
 
-const PrivilegedAccountsView = ({ onSelectIdentity }: { onSelectIdentity: (id: any) => void }) => {
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
+interface IdentitiesResponse {
+    items: Identity[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
+const PrivilegedAccountsView = ({ onSelectIdentity }: { onSelectIdentity: (id: Identity) => void }) => {
     const { token } = useAuth();
-    // We reuse the identities endpoint but filter for privileged tiers
-    const { data: identitiesData, isLoading } = useQuery({
-        queryKey: ["privileged-identities"],
-        queryFn: async () => {
-            if (DEMO_MODE) {
-                const filtered = MOCK_IDENTITIES.filter((i: any) =>
-                    i.privilegeTier === "Critical" ||
-                    i.privilegeTier === "High" ||
-                    anyAdminRole(i.roles)
-                );
-                return { items: filtered, total: filtered.length };
-            }
-            try {
-                const resp = await fetch("/api/identity-risk-intelligence/identities?limit=100", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-                if (!resp.ok) throw new Error("Failed");
-                const data = await resp.json();
-                return {
-                    ...data,
-                    items: data.items.filter((i: any) =>
-                        i.privilegeTier === "Critical" ||
-                        i.privilegeTier === "High" ||
-                        anyAdminRole(i.roles)
-                    )
-                };
-            } catch (err) {
-                console.warn("API Error, falling back to mock:", err);
-                const filtered = MOCK_IDENTITIES.filter((i: any) =>
-                    i.privilegeTier === "Critical" ||
-                    i.privilegeTier === "High" ||
-                    anyAdminRole(i.roles)
-                );
-                return { items: filtered, total: filtered.length };
-            }
-        }
-    });
 
     function anyAdminRole(roles: string[]) {
         return roles.some(r => r.toLowerCase().includes("admin") || r.toLowerCase().includes("owner") || r.toLowerCase().includes("root"));
     }
 
+    const { data: identitiesData, isLoading } = useQuery<IdentitiesResponse>({
+        queryKey: ["privileged-identities"],
+        queryFn: async () => {
+            const resp = await fetch(`${BACKEND_URL}/api/identity-risk-intelligence/identities?limit=100`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!resp.ok) throw new Error("Failed to fetch privileged identities");
+            const data = await resp.json() as IdentitiesResponse;
+            // Filter to only privileged accounts for this view
+            return {
+                ...data,
+                items: data.items.filter((i) =>
+                    i.privilegeTier === "critical" ||
+                    i.privilegeTier === "high" ||
+                    anyAdminRole(i.roles)
+                )
+            };
+        },
+        enabled: !!token
+    });
+
     const identities = identitiesData?.items ?? [];
+
+    const stats = {
+        criticalAdmins: identities.filter(id => id.privilegeTier === "critical").length,
+        crossCloud: identities.filter(id => id.cloudAccounts?.length > 1).length,
+        superAdmins: identities.filter(id => id.roles?.some(r => r.toLowerCase().includes("super") || r.toLowerCase().includes("owner"))).length
+    };
+
+    const cards = [
+        { title: "Critical Admins", value: stats.criticalAdmins, icon: ShieldAlert, color: "text-red-500", desc: "Highest risk privileged accounts" },
+        { title: "Cross-Cloud Admins", value: stats.crossCloud, icon: Globe, color: "text-blue-500", desc: "Admins with multi-provider access" },
+        { title: "SaaS Super Admins", value: stats.superAdmins, icon: Zap, color: "text-purple-500", desc: "Highest tier application control" },
+    ];
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-                <div className="border border-border/50 rounded-lg p-5 bg-card flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-red-400/10 flex items-center justify-center">
-                        <Crown className="h-5 w-5 text-red-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Critical Admins</p>
-                        <p className="text-xl font-bold">{identities.filter((i: any) => i.privilegeTier === "Critical").length}</p>
-                    </div>
-                </div>
-                <div className="border border-border/50 rounded-lg p-5 bg-card flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-orange-400/10 flex items-center justify-center">
-                        <Network className="h-5 w-5 text-orange-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Cross-Cloud Admins</p>
-                        <p className="text-xl font-bold">{identities.filter((i: any) => i.cloudAccounts?.length > 1).length}</p>
-                    </div>
-                </div>
-                <div className="border border-border/50 rounded-lg p-5 bg-card flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-blue-400/10 flex items-center justify-center">
-                        <Terminal className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">SaaS Super Admins</p>
-                        <p className="text-xl font-bold">{identities.filter((i: any) => i.source === "okta" && anyAdminRole(i.roles)).length}</p>
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {cards.map((c, i) => (
+                    <Card key={i} className="border border-border/50 bg-card/60 backdrop-blur-md shadow-lg rounded-xl overflow-hidden hover:border-primary/20 transition-all group">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{c.title}</CardTitle>
+                            <c.icon className={cn("h-4 w-4", c.color)} />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-black">{c.value}</div>
+                            <p className="text-[9px] font-medium text-muted-foreground/60 uppercase mt-1 tracking-tighter">{c.desc}</p>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
-            <div className="border border-border/50 rounded-xl overflow-hidden bg-card">
-                <div className="px-6 py-4 border-b border-border/50 bg-muted/20">
-                    <h3 className="font-semibold text-sm">Privileged Identity Directory</h3>
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-card/60 backdrop-blur-md shadow-lg">
+                <div className="px-6 py-4 border-b border-border/10 bg-muted/20">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Privileged Identity Directory</h3>
                 </div>
                 <IdentityTable
                     identities={identities}
                     isLoading={isLoading}
+                    totalItems={identities.length}
+                    onSelectIdentity={onSelectIdentity}
                     searchTerm=""
                     setSearchTerm={() => { }}
                     page={1}
@@ -98,8 +91,6 @@ const PrivilegedAccountsView = ({ onSelectIdentity }: { onSelectIdentity: (id: a
                     setSourceFilter={() => { }}
                     riskFilter="all"
                     setRiskFilter={() => { }}
-                    totalItems={identities.length}
-                    onSelectIdentity={onSelectIdentity}
                 />
             </div>
         </div>

@@ -1,18 +1,19 @@
 import IdentityTable from "./IdentityTable";
+import type { Identity } from "../../types/identity";
 
 interface IdentityManagementViewProps {
-    identities: any[];
+    identities: Identity[];
     isLoading: boolean;
     searchTerm: string;
     setSearchTerm: (term: string) => void;
     page: number;
-    setPage: (page: any) => void;
+    setPage: (fn: (p: number) => number) => void;
     sourceFilter: string;
     setSourceFilter: (filter: string) => void;
     riskFilter: string;
     setRiskFilter: (filter: string) => void;
     totalItems: number;
-    onSelectIdentity: (identity: any) => void;
+    onSelectIdentity: (identity: Identity) => void;
 }
 
 const IdentityManagementView = (props: IdentityManagementViewProps) => {

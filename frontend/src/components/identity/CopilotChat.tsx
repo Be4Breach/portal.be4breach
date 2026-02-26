@@ -13,12 +13,14 @@ interface Message {
     confidence?: number;
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 export default function CopilotChat({ contextIdentityId }: { contextIdentityId?: string }) {
     const { token } = useAuth();
     const [messages, setMessages] = useState<Message[]>([
         {
             role: "assistant",
-            content: "I'm the Identity Risk Copilot. Ask me about identity risks, MFA gaps, privilege escalations, or remediation strategies. 100% free & offline.",
+            content: "I'm the Identity Analyzer Copilot. Ask me about identity risks, MFA gaps, privilege escalations, or remediation strategies. 100% free & offline.",
             suggestions: [
                 "Show me a risk summary",
                 "Why is MFA important?",
@@ -45,7 +47,7 @@ export default function CopilotChat({ contextIdentityId }: { contextIdentityId?:
         setLoading(true);
 
         try {
-            const resp = await fetch("/api/identity-risk-intelligence/copilot/query", {
+            const resp = await fetch(`${BACKEND_URL}/api/identity-risk-intelligence/copilot/query`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -75,20 +77,20 @@ export default function CopilotChat({ contextIdentityId }: { contextIdentityId?:
     };
 
     return (
-        <Card className="border border-border/50 flex flex-col h-full">
-            <CardHeader className="pb-2 border-b">
+        <Card className="border border-border/50 flex flex-col h-full bg-card/60 backdrop-blur-md shadow-lg rounded-xl overflow-hidden">
+            <CardHeader className="pb-4 border-b border-border/10 bg-muted/20">
                 <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                         <Sparkles className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                        <CardTitle className="text-sm">AI Copilot</CardTitle>
-                        <CardDescription className="text-[10px]">100% Free · Offline · Open Source</CardDescription>
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">AI Identity Copilot</CardTitle>
+                        <CardDescription className="text-[9px] font-bold text-violet-500/80">OFFLINE INTELLIGENCE ACTIVE</CardDescription>
                     </div>
                 </div>
             </CardHeader>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[360px] min-h-[200px]">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 h-[350px] min-h-[350px] max-h-[350px] custom-scrollbar">
                 {messages.map((m, i) => (
                     <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : ""}`}>
                         {m.role === "assistant" && (

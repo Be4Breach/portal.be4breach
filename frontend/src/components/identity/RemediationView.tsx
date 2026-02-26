@@ -1,91 +1,130 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, ArrowRightCircle, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Zap } from "lucide-react";
+// import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { DEMO_MODE } from "@/api/demoConfig";
-import { MOCK_REMEDIATIONS } from "@/mocks/identityMockData";
+import { cn } from "@/lib/utils";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
+interface RemediationAction {
+    priority_level: string;
+    title: string;
+    auto_remediation_possible: boolean;
+    details: string;
+    provider?: string;
+    email: string;
+}
+
+interface RemediationData {
+    total_actions: number;
+    priority_breakdown: Record<string, number>;
+    auto_remediable_count: number;
+    estimated_total_risk_reduction: number;
+    actions: RemediationAction[];
+}
 
 const RemediationView = () => {
     const { token } = useAuth();
-    const { data: remediations, isLoading } = useQuery({
+    const { data: remediations, isLoading } = useQuery<RemediationData>({
         queryKey: ["identity-remediations"],
         queryFn: async () => {
-            if (DEMO_MODE) return MOCK_REMEDIATIONS;
-            try {
-                const resp = await fetch("/api/identity-risk-intelligence/remediations", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-                if (!resp.ok) return MOCK_REMEDIATIONS;
-                return resp.json();
-            } catch (err) {
-                console.warn("API Error, falling back to mock:", err);
-                return MOCK_REMEDIATIONS;
-            }
+            const resp = await fetch(`${BACKEND_URL}/api/identity-risk-intelligence/remediations`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!resp.ok) throw new Error("Failed to fetch remediation actions");
+            return resp.json();
         },
         enabled: !!token,
     });
 
-    if (isLoading) return <div className="flex justify-center p-12">Loading remediation actions...</div>;
+    if (isLoading) {
+        return (
+            <div className="space-y-6 animate-pulse p-6">
+                <div className="grid gap-6 md:grid-cols-4">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="h-20 bg-card/40 border border-border/10 rounded-xl" />
+                    ))}
+                </div>
+                <div className="h-96 bg-card/40 border border-border/10 rounded-xl" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
-                <div className="border border-border/50 rounded-lg p-5 bg-card">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Total Actions</p>
-                    <p className="text-2xl font-bold">{remediations?.total_actions}</p>
-                </div>
-                <div className="border border-border/50 rounded-lg p-5 bg-card border-l-4 border-l-threat-critical">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Critical Priority</p>
-                    <p className="text-2xl font-bold text-threat-critical">{remediations?.priority_breakdown?.critical}</p>
-                </div>
-                <div className="border border-border/50 rounded-lg p-5 bg-card border-l-4 border-l-threat-high">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Auto-Remediable</p>
-                    <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold">{remediations?.auto_remediable_count}</p>
-                        <Zap className="h-4 w-4 text-threat-high fill-threat-high" />
+            <div className="grid gap-6 md:grid-cols-4">
+                <div className="border border-border/50 rounded-2xl p-6 bg-card/60 backdrop-blur-md shadow-lg transition-all hover:-translate-y-1 group">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 opacity-60">Total Actions</p>
+                    <div className="flex items-baseline gap-2">
+                        <p className="text-3xl font-black tracking-tighter group-hover:text-primary transition-colors">{remediations?.total_actions}</p>
+                        <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">Backlog</span>
                     </div>
                 </div>
-                <div className="border border-border/50 rounded-lg p-5 bg-card border-l-4 border-l-threat-safe">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Est. Risk Reduction</p>
-                    <p className="text-2xl font-bold text-threat-safe">-{remediations?.estimated_total_risk_reduction}%</p>
+                <div className="border border-border/50 rounded-2xl p-6 bg-card/60 backdrop-blur-md shadow-lg border-l-4 border-l-red-500/50 transition-all hover:-translate-y-1 group">
+                    <p className="text-[10px] font-black text-red-500/60 uppercase tracking-[0.2em] mb-3">Critical Priority</p>
+                    <p className="text-3xl font-black tracking-tighter text-red-500">{remediations?.priority_breakdown?.critical}</p>
+                </div>
+                <div className="border border-border/50 rounded-2xl p-6 bg-card/60 backdrop-blur-md shadow-lg border-l-4 border-l-orange-500/50 transition-all hover:-translate-y-1 group">
+                    <p className="text-[10px] font-black text-orange-500/60 uppercase tracking-[0.2em] mb-3">Auto-Remediable</p>
+                    <div className="flex items-center gap-3">
+                        <p className="text-3xl font-black tracking-tighter">{remediations?.auto_remediable_count}</p>
+                        <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                            <Zap className="h-4 w-4 text-orange-500 fill-orange-500" />
+                        </div>
+                    </div>
+                </div>
+                <div className="border border-border/50 rounded-2xl p-6 bg-card/60 backdrop-blur-md shadow-lg border-l-4 border-l-emerald-500/50 transition-all hover:-translate-y-1 group">
+                    <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.2em] mb-3">Risk Reduction</p>
+                    <p className="text-3xl font-black tracking-tighter text-emerald-500">-{remediations?.estimated_total_risk_reduction}%</p>
                 </div>
             </div>
 
-            <div className="border border-border/50 rounded-xl bg-card overflow-hidden">
-                <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between bg-muted/20">
-                    <h3 className="font-semibold">Priority Remediation Backlog</h3>
-                    <Button size="sm" variant="outline" className="text-xs gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Execute Managed Batch
-                    </Button>
+            <div className="border border-border/10 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col">
+                <div className="px-8 py-5 border-b border-border/10 flex items-center justify-between bg-muted/20">
+                    <div>
+                        <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">Priority Remediation Backlog</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground/40 mt-1 uppercase">Recommended security controls for identity exposure</p>
+                    </div>
+                    {/* <Button size="sm" className="h-10 px-6 text-[11px] font-black uppercase tracking-widest gap-2 bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                        <CheckCircle2 className="h-4 w-4" /> Execute Batch
+                    </Button> */}
                 </div>
-                <div className="divide-y divide-border/50">
-                    {remediations?.actions?.map((action: any, i: number) => (
-                        <div key={i} className="px-6 py-4 flex items-start justify-between hover:bg-muted/10 transition-colors">
-                            <div className="flex gap-4">
-                                <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${action.priority_level === 'critical' ? 'bg-threat-critical animate-pulse' :
-                                    action.priority_level === 'high' ? 'bg-threat-high' : 'bg-threat-medium'
-                                    }`} />
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <p className="font-medium text-sm">{action.title}</p>
+                <div className="divide-y divide-border/5">
+                    {remediations?.actions?.map((action, i) => (
+                        <div key={i} className="px-8 py-5 flex items-center justify-between hover:bg-muted/30 transition-all group">
+                            <div className="flex gap-6 items-center">
+                                <div className={cn(
+                                    "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-border/10",
+                                    action.priority_level === 'critical' ? 'bg-red-500/10' :
+                                        action.priority_level === 'high' ? 'bg-orange-500/10' : 'bg-amber-500/10'
+                                )}>
+                                    <div className={cn(
+                                        "h-3 w-3 rounded-full",
+                                        action.priority_level === 'critical' ? 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                                            action.priority_level === 'high' ? 'bg-orange-500' : 'bg-amber-500'
+                                    )} />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-3">
+                                        <p className="font-black text-sm tracking-tight group-hover:text-primary transition-colors">{action.title}</p>
                                         {action.auto_remediation_possible && (
-                                            <span className="text-[10px] bg-threat-safe/10 text-threat-safe px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                <Zap className="h-2 w-2 fill-threat-safe" /> Auto
+                                            <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1 uppercase tracking-widest shadow-sm">
+                                                <Zap className="h-2.5 w-2.5 fill-emerald-500" /> Auto
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{action.details}</p>
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted border border-border/50 font-medium">
+                                    <p className="text-xs font-medium text-muted-foreground opacity-70 pr-12 line-clamp-1">{action.details}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                        {/* <span className="text-[9px] font-black px-2 py-0.5 rounded border border-border/10 bg-muted/40 uppercase tracking-widest opacity-60">
                                             {action.provider?.toUpperCase()}
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground">{action.email}</span>
+                                        </span> */}
+                                        <span className="text-[10px] font-bold text-muted-foreground/40">{action.email}</span>
                                     </div>
                                 </div>
                             </div>
-                            <Button size="sm" variant="ghost" className="h-8 text-xs gap-2 text-muted-foreground hover:text-foreground">
-                                View Identity <ArrowRightCircle className="h-3.5 w-3.5" />
-                            </Button>
+                            {/* <Button variant="outline" size="sm" className="h-9 px-4 text-[10px] font-black uppercase tracking-widest gap-2 border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all rounded-lg shadow-sm">
+                                View Profile <ArrowRightCircle className="h-3.5 w-3.5" />
+                            </Button> */}
                         </div>
                     ))}
                 </div>

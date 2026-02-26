@@ -129,7 +129,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
         }
       >
         <ShieldAlert className="h-4 w-4 shrink-0" />
-        <span>Identity Risk Intel</span>
+        <span>Identity Analyzer</span>
       </NavLink>
 
       {/* Compliance */}

@@ -15,3 +15,8 @@ httpx
 python-docx
 semgrep
 groq
+scikit-learn
+numpy
+boto3
+google-cloud-iam
+google-cloud-resource-manager
