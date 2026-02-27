@@ -616,3 +616,23 @@ async def get_scan_history(
     result = [_serialize_scan(_oid(s)) for s in scans]
 
     return result
+
+
+@router.get("/scans/{owner}/{repo}/history")
+async def get_repo_scan_history(
+    owner: str,
+    repo: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Return all scans for a specific repository, newest first."""
+    github_login = current_user.get("github_login") or current_user.get("email")
+    repo_full_name = f"{owner}/{repo}"
+
+    cursor = scans_collection.find(
+        {"repo_full_name": repo_full_name, "github_login": github_login},
+        sort=[("created_at", -1)],
+        limit=100,
+    )
+    scans = await cursor.to_list(length=100)
+
+    return [_serialize_scan(_oid(s)) for s in scans]

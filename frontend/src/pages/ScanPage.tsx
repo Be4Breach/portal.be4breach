@@ -14,7 +14,6 @@ import {
     ChevronDown,
     ChevronRight,
     Loader2,
-    Play,
     ExternalLink,
     Bug,
     Download,
@@ -424,7 +423,7 @@ function SemgrepErrorsPanel({ errors }: { errors: string[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ScanPage() {
-    const { owner, repo } = useParams<{ owner: string; repo: string }>();
+    const { owner, repo, scan_id } = useParams<{ owner: string; repo: string; scan_id: string }>();
     const { token } = useAuth();
     const navigate = useNavigate();
 
@@ -439,18 +438,17 @@ export default function ScanPage() {
     const [isLoadingGl, setIsLoadingGl] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
-    const [isTriggering, setIsTriggering] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filterSev, setFilterSev] = useState<string>("all");
     const [filterSearch, setFilterSearch] = useState("");
     const [findingsPage, setFindingsPage] = useState(1);
     const FINDINGS_PER_PAGE = 10;
 
-    const fetchLatest = useCallback(async () => {
-        if (!token) return;
+    const fetchScan = useCallback(async () => {
+        if (!token || !scan_id) return;
         try {
             const res = await fetch(
-                `${BACKEND_URL}/api/scan/${owner}/${repo}/latest`,
+                `${BACKEND_URL}/api/scan/${scan_id}/results`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -466,7 +464,7 @@ export default function ScanPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [token, owner, repo]);
+    }, [token, scan_id]);
 
     const fetchGitleaks = useCallback(async (scanId: string) => {
         if (!token) return;
@@ -505,7 +503,7 @@ export default function ScanPage() {
         [token, glFindings.length, fetchGitleaks]
     );
 
-    useEffect(() => { fetchLatest(); }, [fetchLatest]);
+    useEffect(() => { fetchScan(); }, [fetchScan]);
 
     useEffect(() => {
         if (!scan || !["queued", "running"].includes(scan.status)) return;
@@ -513,40 +511,7 @@ export default function ScanPage() {
         return () => clearInterval(interval);
     }, [scan, pollResults]);
 
-    const triggerScan = async () => {
-        if (!token) return;
-        setIsTriggering(true);
-        setError(null);
-        setGlFindings([]);
-        setGlCount(0);
-        try {
-            const res = await fetch(`${BACKEND_URL}/api/scan/${owner}/${repo}`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
-            setScan({
-                id: data.scan_id,
-                repo_full_name: data.repo_full_name,
-                status: data.status ?? "queued",
-                severity_summary: { CRITICAL: 0, ERROR: 0, WARNING: 0, INFO: 0 },
-                finding_count: 0,
-                started_at: null,
-                completed_at: null,
-                semgrep_errors: [],
-                error: null,
-                created_at: new Date().toISOString(),
-                gitleaks_status: "queued",
-                gitleaks_finding_count: 0,
-            });
-            setFindings([]);
-        } catch (e) {
-            setError((e as Error).message);
-        } finally {
-            setIsTriggering(false);
-        }
-    };
+    // (trigger is handled by ScanHistoryPage — not needed here)
 
     const filtered = findings.filter((f) => {
         if (filterSev !== "all" && f.severity.toUpperCase() !== filterSev) return false;
@@ -576,11 +541,11 @@ export default function ScanPage() {
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="space-y-1">
                     <button
-                        onClick={() => navigate("/devsecops")}
+                        onClick={() => navigate(`/scan/${owner}/${repo}`)}
                         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        Back to projects
+                        Back to scan history
                     </button>
                     <h1 className="text-xl font-bold flex items-center gap-2">
                         <Shield className="h-5 w-5 text-primary" />
@@ -604,19 +569,6 @@ export default function ScanPage() {
                         <DownloadButton scan={scan} findings={findings} />
                     )}
                     {scan && <StatusBadge status={scan.status} />}
-                    <button
-                        id="trigger-scan-btn"
-                        onClick={triggerScan}
-                        disabled={isTriggering || !!isActive}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isTriggering ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <Play className="h-4 w-4" />
-                        )}
-                        {isActive ? "Scan in progress…" : scan ? "Re-scan" : "Start Scan"}
-                    </button>
                 </div>
             </div>
 
@@ -642,18 +594,17 @@ export default function ScanPage() {
                         <Shield className="h-8 w-8 text-primary" />
                     </div>
                     <div className="text-center space-y-1">
-                        <p className="font-semibold">No scans yet</p>
+                        <p className="font-semibold">Scan not found</p>
                         <p className="text-sm text-muted-foreground max-w-xs">
-                            Run a Semgrep security scan to detect secrets, vulnerabilities, and misconfigurations.
+                            This scan ID doesn't exist or you don't have access.
                         </p>
                     </div>
                     <button
-                        onClick={triggerScan}
-                        disabled={isTriggering}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                        onClick={() => navigate(`/scan/${owner}/${repo}`)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
                     >
-                        {isTriggering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                        Start first scan
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to scan history
                     </button>
                 </div>
             )}

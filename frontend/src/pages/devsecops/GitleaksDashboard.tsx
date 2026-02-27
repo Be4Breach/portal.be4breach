@@ -132,7 +132,6 @@ export default function GitleaksDashboard() {
     const [allFindings, setAllFindings] = useState<GitleaksFinding[]>([]);
     const [repoSummaries, setRepoSummaries] = useState<RepoScanSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
     const [filterSev, setFilterSev] = useState("all");
     const [filterSearch, setFilterSearch] = useState("");
     const [filterRepo, setFilterRepo] = useState("all");
@@ -148,10 +147,15 @@ export default function GitleaksDashboard() {
             if (!histRes.ok) return;
             const scans: any[] = await histRes.json();
 
-            // 2. Only look at completed scans that have gitleaks results
-            const completedScans = scans.filter(
-                s => s.gitleaks_status === "completed"
-            );
+            // 2. Deduplicate: keep only the LATEST completed Gitleaks scan per repo.
+            //    History is sorted newest-first, so the first occurrence per repo wins.
+            const latestByRepo = new Map<string, any>();
+            for (const s of scans) {
+                if (s.gitleaks_status === "completed" && !latestByRepo.has(s.repo_full_name)) {
+                    latestByRepo.set(s.repo_full_name, s);
+                }
+            }
+            const completedScans = Array.from(latestByRepo.values());
 
             // 3. Fetch gitleaks findings for each completed scan in parallel
             const results = await Promise.allSettled(
@@ -199,7 +203,6 @@ export default function GitleaksDashboard() {
 
             setAllFindings(collected);
             setRepoSummaries(summaries);
-            setLastRefreshed(new Date());
         } catch (err) {
             console.error("GitleaksDashboard fetch error:", err);
         } finally {
@@ -257,7 +260,7 @@ export default function GitleaksDashboard() {
                     title="Secrets Detection"
                     subtitle="Live secrets found across all your scanned repositories using Gitleaks"
                     color="text-fuchsia-500"
-                    badge={lastRefreshed ? `Updated ${timeAgo(lastRefreshed.toISOString())}` : undefined}
+                // badge={lastRefreshed ? `Updated ${timeAgo(lastRefreshed.toISOString())}` : undefined}
                 />
                 <button
                     onClick={fetchAll}

@@ -13,6 +13,7 @@ import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
 import ScanPage from "@/pages/ScanPage";
+import ScanHistoryPage from "@/pages/ScanHistoryPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import IdentityRiskPage from "@/pages/IdentityRiskPage";
 import Compliance from "@/pages/Compliance";
@@ -63,7 +64,8 @@ function App() {
             <Route path="compliance" element={<Compliance />} />
             <Route path="identity-analyzer" element={<IdentityRiskPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="scan/:owner/:repo" element={<ScanPage />} />
+            <Route path="scan/:owner/:repo" element={<ScanHistoryPage />} />
+            <Route path="scan/:owner/:repo/:scan_id" element={<ScanPage />} />
             {/* DevSecOps routes */}
             <Route path="devsecops" element={<DevSecOpsDashboard defaultTab="overview" />} />
             <Route path="devsecops/repositories" element={<DevSecOpsDashboard defaultTab="repositories" />} />

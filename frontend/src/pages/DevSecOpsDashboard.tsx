@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Shield, Package, Code2, Globe, Layers, Radar, KeyRound } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ScoreRing, scoreColor } from "./devsecops/Shared";
 
@@ -46,10 +45,7 @@ export default function DevSecOpsDashboard({ defaultTab = "overview" }: { defaul
                         </div>
                         <div className="space-y-1.5">
                             <h1 className="text-3xl font-bold flex items-center gap-3 tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                                DevSecOps Hub
-                                <Badge variant="outline" className="text-xs px-2.5 py-0.5 h-6 border-primary/30 text-primary bg-primary/10 shadow-sm uppercase tracking-widest font-bold">
-                                    LIVE
-                                </Badge>
+                                DevSecOps
                             </h1>
                             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed font-medium">
                                 Unified Enterprise Security Posture Management. Continuous scanning across your supply chain, codebase, and runtime environments.
