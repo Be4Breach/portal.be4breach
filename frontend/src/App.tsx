@@ -71,6 +71,7 @@ function App() {
             <Route path="devsecops/sast" element={<DevSecOpsDashboard defaultTab="sast" />} />
             <Route path="devsecops/dast" element={<DevSecOpsDashboard defaultTab="dast" />} />
             <Route path="devsecops/sbom" element={<DevSecOpsDashboard defaultTab="sbom" />} />
+            <Route path="devsecops/gitleaks" element={<DevSecOpsDashboard defaultTab="gitleaks" />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

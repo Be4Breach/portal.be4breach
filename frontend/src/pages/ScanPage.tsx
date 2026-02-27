@@ -19,6 +19,7 @@ import {
     Bug,
     Download,
     Code2,
+    KeyRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,10 @@ interface Scan {
     completed_at: string | null;
     error: string | null;
     semgrep_errors: string[];
+    // Gitleaks metadata returned in same scan doc
+    gitleaks_status?: string;
+    gitleaks_finding_count?: number;
+    gitleaks_severity?: Record<string, number>;
 }
 
 interface Finding {
@@ -58,6 +63,11 @@ interface Finding {
     cwe: string[];
     owasp: string[];
     fix: string | null;
+    // Gitleaks-specific extras
+    type?: string;
+    commit?: string;
+    author?: string;
+    secret_entropy?: number;
 }
 
 // ─── Severity config ──────────────────────────────────────────────────────────
@@ -111,7 +121,9 @@ function formatDuration(start: string | null, end: string | null): string {
 
 function formatTime(iso: string | null): string {
     if (!iso) return "—";
-    return new Date(iso).toLocaleString();
+    // Ensure the string is treated as UTC if it has no timezone suffix
+    const normalised = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+    return new Date(normalised).toLocaleString();
 }
 
 // ─── Download helpers ─────────────────────────────────────────────────────────
@@ -418,8 +430,14 @@ export default function ScanPage() {
 
     const repoFullName = `${owner}/${repo}`;
 
+    const [activeTab, setActiveTab] = useState<"sast" | "gitleaks">("sast");
     const [scan, setScan] = useState<Scan | null>(null);
     const [findings, setFindings] = useState<Finding[]>([]);
+    // Gitleaks state
+    const [glFindings, setGlFindings] = useState<Finding[]>([]);
+    const [glCount, setGlCount] = useState<number>(0);
+    const [isLoadingGl, setIsLoadingGl] = useState(false);
+
     const [isLoading, setIsLoading] = useState(true);
     const [isTriggering, setIsTriggering] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -439,12 +457,32 @@ export default function ScanPage() {
             const data = await res.json();
             setScan(data.scan);
             setFindings(data.findings ?? []);
+            // If scan already completed, also load gitleaks
+            if (data.scan?.id && data.scan?.gitleaks_status === "completed") {
+                fetchGitleaks(data.scan.id);
+            }
         } catch (e) {
             setError((e as Error).message);
         } finally {
             setIsLoading(false);
         }
     }, [token, owner, repo]);
+
+    const fetchGitleaks = useCallback(async (scanId: string) => {
+        if (!token) return;
+        setIsLoadingGl(true);
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/scan/${scanId}/gitleaks`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            setGlFindings(data.findings ?? []);
+            setGlCount(data.gitleaks_finding_count ?? 0);
+        } catch { /* silent */ } finally {
+            setIsLoadingGl(false);
+        }
+    }, [token]);
 
     const pollResults = useCallback(
         async (scanId: string) => {
@@ -458,9 +496,13 @@ export default function ScanPage() {
                 const data = await res.json();
                 setScan(data.scan);
                 setFindings(data.findings ?? []);
+                // Also poll gitleaks status
+                if (data.scan?.gitleaks_status === "completed" && glFindings.length === 0) {
+                    fetchGitleaks(scanId);
+                }
             } catch { /* silently ignore */ }
         },
-        [token]
+        [token, glFindings.length, fetchGitleaks]
     );
 
     useEffect(() => { fetchLatest(); }, [fetchLatest]);
@@ -475,6 +517,8 @@ export default function ScanPage() {
         if (!token) return;
         setIsTriggering(true);
         setError(null);
+        setGlFindings([]);
+        setGlCount(0);
         try {
             const res = await fetch(`${BACKEND_URL}/api/scan/${owner}/${repo}`, {
                 method: "POST",
@@ -483,7 +527,7 @@ export default function ScanPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
             setScan({
-                id: data.scan_id,           // trigger returns scan_id, not id
+                id: data.scan_id,
                 repo_full_name: data.repo_full_name,
                 status: data.status ?? "queued",
                 severity_summary: { CRITICAL: 0, ERROR: 0, WARNING: 0, INFO: 0 },
@@ -493,6 +537,8 @@ export default function ScanPage() {
                 semgrep_errors: [],
                 error: null,
                 created_at: new Date().toISOString(),
+                gitleaks_status: "queued",
+                gitleaks_finding_count: 0,
             });
             setFindings([]);
         } catch (e) {
@@ -530,11 +576,11 @@ export default function ScanPage() {
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="space-y-1">
                     <button
-                        onClick={() => navigate("/devsecops/repositories")}
+                        onClick={() => navigate("/devsecops")}
                         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        Back to repositories
+                        Back to projects
                     </button>
                     <h1 className="text-xl font-bold flex items-center gap-2">
                         <Shield className="h-5 w-5 text-primary" />
@@ -624,7 +670,7 @@ export default function ScanPage() {
                             {scan.status === "queued" ? "Scan queued…" : "Scanning repository…"}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Cloning repo and running Semgrep analysis. This may take 1–3 minutes.
+                            Cloning repo and running Semgrep + Gitleaks in parallel. This may take 1–3 minutes.
                         </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -651,167 +697,261 @@ export default function ScanPage() {
             {/* ── Completed results ─────────────────────────────────────────────── */}
             {!isLoading && scan?.status === "completed" && (
                 <>
-                    {/* Summary cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {(["CRITICAL", "ERROR", "WARNING", "INFO"] as const).map((sev) => {
-                            const cfg = getSev(sev);
-                            const Icon = cfg.icon;
-                            const count = summary[sev];
-                            return (
-                                <button
-                                    key={sev}
-                                    onClick={() => setFilterSev(filterSev === sev ? "all" : sev)}
-                                    className={cn(
-                                        "flex items-center gap-3 p-4 rounded-xl border bg-card text-left transition-all hover:shadow-sm",
-                                        filterSev === sev && "ring-2 ring-primary"
-                                    )}
-                                >
-                                    <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", cfg.badge)}>
-                                        <Icon className="h-4 w-4" />
-                                    </div>
-                                    <div>
-                                        <p className="text-lg font-bold leading-none">{count}</p>
-                                        <p className="text-[11px] text-muted-foreground mt-0.5">{cfg.label}</p>
-                                    </div>
-                                </button>
-                            );
-                        })}
+                    {/* ── SAST / Gitleaks Tabs ──────────────────────────────── */}
+                    <div className="flex border-b border-border/60">
+                        <button
+                            onClick={() => setActiveTab("sast")}
+                            className={cn(
+                                "relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors",
+                                activeTab === "sast" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {activeTab === "sast" && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-primary rounded-t" />}
+                            <Shield className="h-4 w-4" />
+                            SAST
+                            <span className={cn("ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold", scan.finding_count > 0 ? "bg-orange-500/10 text-orange-500" : "bg-emerald-500/10 text-emerald-600")}>
+                                {scan.finding_count}
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab("gitleaks");
+                                if (scan.id && glFindings.length === 0 && scan.gitleaks_status === "completed") {
+                                    fetchGitleaks(scan.id);
+                                }
+                            }}
+                            className={cn(
+                                "relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors",
+                                activeTab === "gitleaks" ? "text-fuchsia-500" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {activeTab === "gitleaks" && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-fuchsia-500 rounded-t" />}
+                            <KeyRound className="h-4 w-4" />
+                            Secrets (Gitleaks)
+                            {scan.gitleaks_status === "completed" && (
+                                <span className={cn("ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold", glCount > 0 ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-600")}>
+                                    {glCount}
+                                </span>
+                            )}
+                            {scan.gitleaks_status === "running" && (
+                                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                            )}
+                        </button>
                     </div>
 
-                    {/* Severity bar + meta */}
-                    {scan.finding_count > 0 && (
-                        <div className="space-y-1.5">
-                            <SeverityBar summary={summary} />
-                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                                <span>{scan.finding_count} total findings</span>
-                                <span>
-                                    Scanned in {formatDuration(scan.started_at, scan.completed_at)} · {formatTime(scan.completed_at)}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* No findings */}
-                    {scan.finding_count === 0 && (
-                        <div className="flex flex-col items-center justify-center py-16 gap-3 border rounded-xl bg-card">
-                            <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-                            <p className="font-semibold text-emerald-600">No issues found</p>
-                            <p className="text-sm text-muted-foreground">
-                                Semgrep found no security issues in this repository.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Findings list */}
-                    {scan.finding_count > 0 && (
-                        <div className="space-y-4">
-                            {/* Filter bar */}
-                            <div className="flex gap-3 flex-wrap">
-                                <input
-                                    placeholder="Search findings…"
-                                    value={filterSearch}
-                                    onChange={(e) => { setFilterSearch(e.target.value); setFindingsPage(1); }}
-                                    className="flex-1 min-w-48 h-9 px-3 rounded-md border bg-secondary text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                />
-                                <select
-                                    value={filterSev}
-                                    onChange={(e) => { setFilterSev(e.target.value); setFindingsPage(1); }}
-                                    className="h-9 px-3 pr-8 rounded-md border bg-secondary text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
-                                >
-                                    <option value="all">All severities</option>
-                                    <option value="CRITICAL">Critical</option>
-                                    <option value="ERROR">High</option>
-                                    <option value="WARNING">Medium</option>
-                                    <option value="INFO">Info</option>
-                                </select>
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                                Showing {filtered.length === 0 ? 0 : (findingsPage - 1) * FINDINGS_PER_PAGE + 1}–{Math.min(findingsPage * FINDINGS_PER_PAGE, filtered.length)} of {filtered.length} findings
-                            </p>
-
-                            {filtered.length === 0 ? (
-                                <div className="flex flex-col items-center py-12 gap-2 text-muted-foreground">
-                                    <Bug className="h-8 w-8 opacity-30" />
-                                    <p className="text-sm">No findings match your filter.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {pagedFindings.map((f, i) => (
-                                        <FindingCard key={`${f.rule_id}-${f.file_path}-${i}`} finding={f} />
-                                    ))}
-
-                                    {/* ── Pagination ── */}
-                                    {totalFindingPages > 1 && (
-                                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                            <p className="text-[11px] text-muted-foreground">
-                                                Page {findingsPage} of {totalFindingPages}
-                                            </p>
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => setFindingsPage(1)}
-                                                    disabled={findingsPage === 1}
-                                                    className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                >
-                                                    «
-                                                </button>
-                                                <button
-                                                    onClick={() => setFindingsPage((p) => Math.max(1, p - 1))}
-                                                    disabled={findingsPage === 1}
-                                                    className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                >
-                                                    ‹ Prev
-                                                </button>
-                                                {Array.from({ length: totalFindingPages }, (_, i) => i + 1)
-                                                    .filter((p) => p === 1 || p === totalFindingPages || Math.abs(p - findingsPage) <= 1)
-                                                    .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                                                        if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("...");
-                                                        acc.push(p);
-                                                        return acc;
-                                                    }, [])
-                                                    .map((p, idx) =>
-                                                        p === "..." ? (
-                                                            <span key={`ellipsis-${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
-                                                        ) : (
-                                                            <button
-                                                                key={p}
-                                                                onClick={() => setFindingsPage(p as number)}
-                                                                className={cn(
-                                                                    "min-w-[28px] px-2 py-1 text-xs rounded-md border transition-colors",
-                                                                    findingsPage === p
-                                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                                        : "bg-secondary hover:bg-secondary/80"
-                                                                )}
-                                                            >
-                                                                {p}
-                                                            </button>
-                                                        )
-                                                    )}
-                                                <button
-                                                    onClick={() => setFindingsPage((p) => Math.min(totalFindingPages, p + 1))}
-                                                    disabled={findingsPage === totalFindingPages}
-                                                    className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                >
-                                                    Next ›
-                                                </button>
-                                                <button
-                                                    onClick={() => setFindingsPage(totalFindingPages)}
-                                                    disabled={findingsPage === totalFindingPages}
-                                                    className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                >
-                                                    »
-                                                </button>
+                    {/* ── SAST Panel ─────────────────────────────────────────── */}
+                    {activeTab === "sast" && (
+                        <>
+                            {/* Summary cards */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {(["CRITICAL", "ERROR", "WARNING", "INFO"] as const).map((sev) => {
+                                    const cfg = getSev(sev);
+                                    const Icon = cfg.icon;
+                                    const count = summary[sev];
+                                    return (
+                                        <button
+                                            key={sev}
+                                            onClick={() => setFilterSev(filterSev === sev ? "all" : sev)}
+                                            className={cn(
+                                                "flex items-center gap-3 p-4 rounded-xl border bg-card text-left transition-all hover:shadow-sm",
+                                                filterSev === sev && "ring-2 ring-primary"
+                                            )}
+                                        >
+                                            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", cfg.badge)}>
+                                                <Icon className="h-4 w-4" />
                                             </div>
+                                            <div>
+                                                <p className="text-lg font-bold leading-none">{count}</p>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">{cfg.label}</p>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Severity bar + meta */}
+                            {scan.finding_count > 0 && (
+                                <div className="space-y-1.5">
+                                    <SeverityBar summary={summary} />
+                                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                        <span>{scan.finding_count} total findings</span>
+                                        <span>
+                                            Scanned in {formatDuration(scan.started_at, scan.completed_at)} · {formatTime(scan.completed_at)}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* No findings */}
+                            {scan.finding_count === 0 && (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3 border rounded-xl bg-card">
+                                    <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                                    <p className="font-semibold text-emerald-600">No SAST issues found</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Semgrep found no security issues in this repository.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Findings list */}
+                            {scan.finding_count > 0 && (
+                                <div className="space-y-4">
+                                    {/* Filter bar */}
+                                    <div className="flex gap-3 flex-wrap">
+                                        <input
+                                            placeholder="Search findings…"
+                                            value={filterSearch}
+                                            onChange={(e) => { setFilterSearch(e.target.value); setFindingsPage(1); }}
+                                            className="flex-1 min-w-48 h-9 px-3 rounded-md border bg-secondary text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                        <select
+                                            value={filterSev}
+                                            onChange={(e) => { setFilterSev(e.target.value); setFindingsPage(1); }}
+                                            className="h-9 px-3 pr-8 rounded-md border bg-secondary text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+                                        >
+                                            <option value="all">All severities</option>
+                                            <option value="CRITICAL">Critical</option>
+                                            <option value="ERROR">High</option>
+                                            <option value="WARNING">Medium</option>
+                                            <option value="INFO">Info</option>
+                                        </select>
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Showing {filtered.length === 0 ? 0 : (findingsPage - 1) * FINDINGS_PER_PAGE + 1}–{Math.min(findingsPage * FINDINGS_PER_PAGE, filtered.length)} of {filtered.length} findings
+                                    </p>
+
+                                    {filtered.length === 0 ? (
+                                        <div className="flex flex-col items-center py-12 gap-2 text-muted-foreground">
+                                            <Bug className="h-8 w-8 opacity-30" />
+                                            <p className="text-sm">No findings match your filter.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {pagedFindings.map((f, i) => (
+                                                <FindingCard key={`${f.rule_id}-${f.file_path}-${i}`} finding={f} />
+                                            ))}
+
+                                            {/* ── Pagination ── */}
+                                            {totalFindingPages > 1 && (
+                                                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        Page {findingsPage} of {totalFindingPages}
+                                                    </p>
+                                                    <div className="flex items-center gap-1">
+                                                        <button onClick={() => setFindingsPage(1)} disabled={findingsPage === 1} className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">«</button>
+                                                        <button onClick={() => setFindingsPage((p) => Math.max(1, p - 1))} disabled={findingsPage === 1} className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">‹ Prev</button>
+                                                        {Array.from({ length: totalFindingPages }, (_, i) => i + 1)
+                                                            .filter((p) => p === 1 || p === totalFindingPages || Math.abs(p - findingsPage) <= 1)
+                                                            .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                                                                if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("...");
+                                                                acc.push(p);
+                                                                return acc;
+                                                            }, [])
+                                                            .map((p, idx) =>
+                                                                p === "..." ? (
+                                                                    <span key={`ellipsis-${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
+                                                                ) : (
+                                                                    <button key={p} onClick={() => setFindingsPage(p as number)} className={cn("min-w-[28px] px-2 py-1 text-xs rounded-md border transition-colors", findingsPage === p ? "bg-primary text-primary-foreground border-primary" : "bg-secondary hover:bg-secondary/80")}>{p}</button>
+                                                                )
+                                                            )}
+                                                        <button onClick={() => setFindingsPage((p) => Math.min(totalFindingPages, p + 1))} disabled={findingsPage === totalFindingPages} className="px-2.5 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next ›</button>
+                                                        <button onClick={() => setFindingsPage(totalFindingPages)} disabled={findingsPage === totalFindingPages} className="px-2 py-1 text-xs rounded-md border bg-secondary hover:bg-secondary/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">»</button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             )}
-                        </div>
+
+                            {/* ── Semgrep parse errors ─────────────────────────────────── */}
+                            {scan.semgrep_errors.length > 0 && (
+                                <SemgrepErrorsPanel errors={scan.semgrep_errors} />
+                            )}
+                        </>
                     )}
 
-                    {/* ── Semgrep parse errors ─────────────────────────────────── */}
-                    {scan.semgrep_errors.length > 0 && (
-                        <SemgrepErrorsPanel errors={scan.semgrep_errors} />
+                    {/* ── Gitleaks Panel ─────────────────────────────────────── */}
+                    {activeTab === "gitleaks" && (
+                        <div className="space-y-4">
+                            {isLoadingGl && (
+                                <div className="flex items-center justify-center py-16">
+                                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                </div>
+                            )}
+                            {!isLoadingGl && scan.gitleaks_status === "failed" && (
+                                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5 text-center space-y-2">
+                                    <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
+                                    <p className="font-semibold text-destructive">Gitleaks scan failed</p>
+                                    <p className="text-xs text-muted-foreground">Gitleaks may not be installed on the server or the scan timed out.</p>
+                                </div>
+                            )}
+                            {!isLoadingGl && scan.gitleaks_status === "completed" && glFindings.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3 border rounded-xl bg-card">
+                                    <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                                    <p className="font-semibold text-emerald-600">No secrets detected</p>
+                                    <p className="text-sm text-muted-foreground">Gitleaks found no hardcoded secrets or credentials.</p>
+                                </div>
+                            )}
+                            {!isLoadingGl && glFindings.length > 0 && (
+                                <>
+                                    {/* Summary */}
+                                    <div className="flex flex-wrap gap-3">
+                                        {Object.entries(scan.gitleaks_severity ?? {}).filter(([, v]) => v > 0).map(([sev, count]) => (
+                                            <div key={sev} className={cn("flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold",
+                                                sev === "CRITICAL" ? "bg-red-500/10 border-red-500/30 text-red-500" :
+                                                    sev === "HIGH" ? "bg-orange-500/10 border-orange-500/30 text-orange-500" :
+                                                        "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
+                                            )}>
+                                                <KeyRound className="h-4 w-4" />
+                                                {count} {sev}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {/* Findings */}
+                                    <div className="space-y-2">
+                                        {glFindings.map((f, i) => (
+                                            <div key={i} className={cn(
+                                                "border-l-2 rounded-lg border bg-card p-4 space-y-2",
+                                                f.severity === "CRITICAL" ? "border-l-red-500" : "border-l-orange-500"
+                                            )}>
+                                                <div className="flex items-start justify-between gap-2 flex-wrap">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                                            f.severity === "CRITICAL" ? "bg-red-500/10 text-red-500 border-red-500/30" : "bg-orange-500/10 text-orange-500 border-orange-500/30"
+                                                        )}>{f.severity}</span>
+                                                        <code className="text-[11px] text-muted-foreground font-mono">{f.rule_id}</code>
+                                                    </div>
+                                                    {f.commit && <code className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-md">commit: {f.commit}</code>}
+                                                </div>
+                                                <p className="text-sm font-semibold">{f.message}</p>
+                                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                                    <FileCode2 className="h-3 w-3 shrink-0" />
+                                                    <span className="font-mono truncate">{f.file_path}</span>
+                                                    {f.line_start != null && <span>:{f.line_start}</span>}
+                                                </div>
+                                                {f.code_snippet && (
+                                                    <div className="rounded-md bg-secondary px-3 py-2">
+                                                        <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Detected (masked)</p>
+                                                        <code className="text-xs font-mono">{f.code_snippet}</code>
+                                                    </div>
+                                                )}
+                                                {f.fix && (
+                                                    <div className="rounded-md bg-emerald-500/5 border border-emerald-500/20 px-3 py-2">
+                                                        <p className="text-[10px] text-emerald-600 uppercase tracking-widest font-bold mb-1">Remediation</p>
+                                                        <p className="text-[11px] text-emerald-700 dark:text-emerald-400">{f.fix}</p>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {f.cwe?.map((c) => <span key={c} className="text-[10px] font-mono px-1.5 py-0.5 rounded border bg-secondary">{c}</span>)}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     )}
                 </>
             )}

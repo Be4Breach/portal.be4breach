@@ -14,6 +14,7 @@ import {
   Layers,
   Github,
   Radar,
+  KeyRound,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -29,6 +30,7 @@ const devSecOpsItems = [
   { title: "SAST", icon: Code2, path: "/devsecops/sast" },
   { title: "DAST", icon: Globe, path: "/devsecops/dast" },
   { title: "SBOM", icon: Layers, path: "/devsecops/sbom" },
+  { title: "Secrets", icon: KeyRound, path: "/devsecops/gitleaks" },
 ];
 
 // ─── Shared link style ────────────────────────────────────────────────────────
