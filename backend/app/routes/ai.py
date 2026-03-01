@@ -121,26 +121,96 @@ async def ai_chat(request: ChatRequest, current_user: dict = Depends(get_current
         identity_context = "\nIdentity Analyzer data is currently unavailable."
         logger.error(f"Error fetching identity context: {e}")
 
+    # 3. Fetch Gitleaks / Secrets Scanning Context
+    try:
+        # Step 1: Find the latest completed gitleaks scan per repo for the current user.
+        # scans_collection uses 'gitleaks_status' (not 'type') to track Gitleaks state.
+        # $toString converts ObjectId to string so it matches findings_collection's scan_id field.
+        latest_gitleaks_scans_pipeline = [
+            {"$match": {"github_login": github_login, "gitleaks_status": "completed"}},
+            {"$sort": {"completed_at": -1}},
+            {"$group": {"_id": "$repo_full_name", "latest_scan_id": {"$first": {"$toString": "$_id"}}}}
+        ]
+        latest_scan_ids = [doc["latest_scan_id"] async for doc in scans_collection.aggregate(latest_gitleaks_scans_pipeline)]
+
+        if not latest_scan_ids:
+            gitleaks_context = """
+            Secrets Detection (Gitleaks) Summary:
+            - No completed Gitleaks scans found for your repositories.
+            - Please ensure Gitleaks scans are configured and have completed successfully.
+            """
+        else:
+            # Step 2: Aggregate secrets by severity across all repos for this user, using only latest scan IDs
+            secrets_pipeline = [
+                {"$match": {"github_login": github_login, "type": "gitleaks", "scan_id": {"$in": latest_scan_ids}}},
+                {"$group": {"_id": "$severity", "count": {"$sum": 1}}}
+            ]
+            secrets_by_severity = {}
+            async for doc in findings_collection.aggregate(secrets_pipeline):
+                sev = doc.get("_id") or "UNKNOWN"
+                secrets_by_severity[sev] = doc.get("count", 0)
+
+            total_secrets = sum(secrets_by_severity.values())
+
+            # Repos that have secrets, using only latest scan IDs
+            secrets_repos_pipeline = [
+                {"$match": {"github_login": github_login, "type": "gitleaks", "scan_id": {"$in": latest_scan_ids}}},
+                {"$group": {"_id": "$repo_full_name", "count": {"$sum": 1}}},
+                {"$sort": {"count": -1}},
+                {"$limit": 5}
+            ]
+            repos_with_secrets = []
+            async for doc in findings_collection.aggregate(secrets_repos_pipeline):
+                if doc.get("_id"):
+                    repos_with_secrets.append(f"{doc['_id']} ({doc['count']} secrets)")
+
+            # Sample high/critical secret types (rule_ids), using only latest scan IDs
+            sample_secrets = []
+            async for f in findings_collection.find(
+                {"github_login": github_login, "type": "gitleaks", "scan_id": {"$in": latest_scan_ids}, "severity": {"$in": ["CRITICAL", "HIGH"]}},
+                {"rule_id": 1, "message": 1, "repo_full_name": 1}
+            ).limit(5):
+                rule = f.get("rule_id", "unknown")
+                msg = (f.get("message") or "")[:120]
+                repo = f.get("repo_full_name", "unknown")
+                sample_secrets.append(f"{rule} in {repo}: {msg}")
+
+            gitleaks_context = f"""
+            Secrets Detection (Gitleaks) Summary:
+            - Total Secrets/Credentials Found: {total_secrets}
+            - Secrets by Severity: {json.dumps(secrets_by_severity)}
+            - Top Repositories with Exposed Secrets: {', '.join(repos_with_secrets) if repos_with_secrets else 'None'}
+            - Sample Critical/High Secret Findings: {json.dumps(sample_secrets)}
+            """
+    except Exception as e:
+        gitleaks_context = "\nSecrets Detection (Gitleaks) data is currently unavailable."
+        logger.error(f"Error fetching Gitleaks context: {e}")
+
     system_prompt = f"""
-    You are the "Identity Analyzer AI" for Be4Breach, an enterprise platform for DevSecOps and Identity Analyzer.
+    You are the "Be4Breach Security Copilot" for Be4Breach, an enterprise platform for DevSecOps and Identity Security.
     Your objective is to provide professional, concise, and actionable security insights based on the context data provided.
 
     CONTEXT DATA:
     ---
-    SECURITY SCANNING:
+    SAST / SECURITY SCANNING:
     {context_data}
 
     IDENTITY ANALYZER:
     {identity_context}
+
+    SECRETS DETECTION (GITLEAKS):
+    {gitleaks_context}
     ---
 
     RESPONSE GUIDELINES:
-    1. Always refer to this module as "Identity Analyzer". Never use "Identity Risk Intelligence".
-    2. If the user asks a specific question and the data is limited, summarize whatever IS available and provide general security best practices related to the topic.
-    3. If no identities are found, suggest connecting a provider like AWS, GCP, or Okta in the Identity Analyzer settings.
-    4. Be proactive: if you see high risk scores or low MFA coverage, mention them as priorities.
-    5. Maintain a professional, confident, and helpful tone.
-    6. Ensure you name platforms (AWS, Azure, Okta, etc.) explicitly and never refer to them as "demo" data.
+    1. Always refer to the identity module as "Identity Analyzer". Never use "Identity Risk Intelligence".
+    2. Always refer to the secrets module as "Secrets Detection" or "Gitleaks". Treat exposed credentials as critical risks.
+    3. If the user asks a specific question and the data is limited, summarize whatever IS available and provide general security best practices related to the topic.
+    4. If no identities are found, suggest connecting a provider like AWS, GCP, or Okta in the Identity Analyzer settings.
+    5. Be proactive: if you see exposed secrets, high risk scores, or low MFA coverage, mention them as priorities.
+    6. Maintain a professional, confident, and helpful tone.
+    7. Ensure you name platforms (AWS, Azure, Okta, etc.) explicitly and never refer to them as "demo" data.
+    8. When secrets are found, always recommend rotating/revoking the exposed credentials immediately.
     """
 
     try:
